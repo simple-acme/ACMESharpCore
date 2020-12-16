@@ -319,6 +319,12 @@ namespace ACMESharp.Protocol
         public async Task<AccountDetails> ChangeAccountKeyAsync(IJwsTool newSigner,
             CancellationToken cancel = default(CancellationToken))
         {
+            if (Account == null)
+            {
+                Signer = newSigner;
+                return null;
+            }
+
             var requUrl = new Uri(_http.BaseAddress, Directory.KeyChange);
             var message = new KeyChangeRequest
             {
