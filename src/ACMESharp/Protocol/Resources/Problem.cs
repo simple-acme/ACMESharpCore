@@ -16,5 +16,8 @@ namespace ACMESharp.Protocol.Resources
 
         [JsonProperty("status")]
         public int? Status { get; set; }
+
+        [JsonProperty("instance")]
+        public string Instance { get; set; }
     }
 }

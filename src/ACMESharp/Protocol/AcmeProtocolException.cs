@@ -55,7 +55,7 @@ namespace ACMESharp.Protocol
         public string ProblemTypeRaw => _problem?.Type;
 
         public string ProblemDetail => _problem?.Detail;
-
+        public string ProblemInstance => _problem?.Instance;
         public int ProblemStatus => _problem?.Status ?? -1;
     }
 }
