@@ -179,7 +179,7 @@ namespace ACMESharp.Protocol
             // According to RFC, this should respond to HEAD request with 200
             // and to GET request with a 204, but we're seeing 204 for both
 
-            await SendAcmeAsync(
+            _ = await SendAcmeAsync(
                     new Uri(Directory.NewNonce),
                     method: HttpMethod.Head,
                     expectedStatuses: new[] {
@@ -688,7 +688,7 @@ namespace ACMESharp.Protocol
             };
             // If OK is returned, we're all done. Otherwise general 
             // exception handling will kick in
-            var resp = await SendAcmeAsync(
+            _ = await SendAcmeAsync(
                     new Uri(_http.BaseAddress, Directory.RevokeCert),
                     method: HttpMethod.Post,
                     message: message,
@@ -713,7 +713,7 @@ namespace ACMESharp.Protocol
             var message = _usePostAsGet ? "" : null;
             var skipNonce = _usePostAsGet ? false : true;
             var resp = await SendAcmeAsync(url, method, message, skipNonce: skipNonce, cancel: cancel);
-            resp.EnsureSuccessStatusCode();
+            _ = resp.EnsureSuccessStatusCode();
             return resp;
         }
 
@@ -744,7 +744,7 @@ namespace ACMESharp.Protocol
             Uri uri, HttpMethod method = null, object message = null,
             HttpStatusCode[] expectedStatuses = null,
             bool skipNonce = false, bool skipSigning = false, bool includePublicKey = false,
-            CancellationToken cancel = default(CancellationToken),
+            CancellationToken cancel = default,
             [System.Runtime.CompilerServices.CallerMemberName]string opName = "")
         {
             if (method == null)
@@ -767,7 +767,7 @@ namespace ACMESharp.Protocol
             }
 
             BeforeHttpSend?.Invoke(opName, requ);
-            var resp = await _http.SendAsync(requ);
+            var resp = await _http.SendAsync(requ, cancel);
             AfterHttpSend?.Invoke(opName, resp);
 
             if (expectedStatuses.Length > 0
@@ -777,13 +777,13 @@ namespace ACMESharp.Protocol
                 // there but if not we don't want to overshadow the more immediate
                 // error that we're about to signal with an exception
                 if (!skipNonce)
-                    ExtractNextNonce(resp, true);
+                    _ = ExtractNextNonce(resp, true);
 
                 throw await DecodeResponseErrorAsync(resp, opName: opName);
             }
 
             if (!skipNonce)
-                ExtractNextNonce(resp);
+                _ = ExtractNextNonce(resp);
 
             return resp;
         }
@@ -831,7 +831,7 @@ namespace ACMESharp.Protocol
             if (string.IsNullOrEmpty(msg))
             {
                 if (opName.EndsWith("Async"))
-                    opName.Substring(0, opName.Length - "Async".Length);
+                    _ = opName.Substring(0, opName.Length - "Async".Length);
                 msg = $"Unexpected response status code [{resp.StatusCode}] for [{opName}]";
             }
             return new AcmeProtocolException(message ?? msg, problem);
@@ -850,7 +850,7 @@ namespace ACMESharp.Protocol
         protected async Task<AccountDetails> DecodeAccountResponseAsync(HttpResponseMessage resp,
             AccountDetails existing = null)
         {
-            resp.Headers.TryGetValues("Link", out var linkValues);
+            _ = resp.Headers.TryGetValues("Link", out var linkValues);
             var acctUrl = resp.Headers.Location?.ToString();
             var links = new HTTP.LinkCollection(linkValues); // This allows/handles null
             var tosLink = links.GetFirstOrDefault(Constants.TosLinkHeaderRelationKey)?.Uri;
@@ -980,7 +980,7 @@ namespace ACMESharp.Protocol
 
         protected string ResolvePayload(object message)
         {
-            var payload = string.Empty;
+            string payload;
             if (message is string)
                 payload = (string)message;
             else if (message is JObject)
