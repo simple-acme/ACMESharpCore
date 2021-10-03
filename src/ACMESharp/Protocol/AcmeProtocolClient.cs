@@ -122,10 +122,11 @@ namespace ACMESharp.Protocol
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.1.1
         /// </remarks>
         public async Task<ServiceDirectory> GetDirectoryAsync(
+            string relativeUri,
             CancellationToken cancel = default(CancellationToken))
         {
             return await SendAcmeAsync<ServiceDirectory>(
-                    new Uri(_http.BaseAddress, Directory.Directory),
+                    new Uri(_http.BaseAddress, relativeUri ?? ""),
                     skipNonce: true,
                     cancel: cancel);
         }
@@ -830,11 +831,9 @@ namespace ACMESharp.Protocol
 
             if (string.IsNullOrEmpty(msg))
             {
-                if (opName.EndsWith("Async"))
-                    _ = opName.Substring(0, opName.Length - "Async".Length);
                 msg = $"Unexpected response status code [{resp.StatusCode}] for [{opName}]";
             }
-            return new AcmeProtocolException(message ?? msg, problem);
+            return new AcmeProtocolException(resp, message ?? msg, problem);
         }
 
         /// <summary>
