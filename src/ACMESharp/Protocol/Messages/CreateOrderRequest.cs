@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using ACMESharp.Crypto.JOSE;
+using System.Text.Json.Serialization;
 using ACMESharp.Protocol.Resources;
-using Newtonsoft.Json;
 
 namespace ACMESharp.Protocol.Messages
 {
@@ -10,14 +9,17 @@ namespace ACMESharp.Protocol.Messages
     /// </summary>
     public class CreateOrderRequest
     {
-        [JsonProperty("identifiers", Required = Required.Always)]
+        [JsonPropertyName("identifiers")]
+        [JsonRequired]
         [Required, MinLength(1)]
         public Identifier[] Identifiers { get; set; }
 
-        [JsonProperty("notBefore", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("notBefore")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string NotBefore { get; set; }
 
-        [JsonProperty("notAfter", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("notAfter")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string NotAfter { get; set; }
     }
 }

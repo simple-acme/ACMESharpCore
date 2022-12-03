@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Resources
 {
@@ -8,22 +8,25 @@ namespace ACMESharp.Protocol.Resources
     /// </summary>
     public class Authorization
     {
-        [JsonProperty("identifier", Required = Required.Always)]
+        [JsonPropertyName("identifier")]
+        [JsonRequired]
         [Required]
         public Identifier Identifier { get; set; }
 
-        [JsonProperty("status", Required = Required.Always)]
+        [JsonPropertyName("status")]
+        [JsonRequired]
         [Required]
         public string Status { get; set; }
 
-        [JsonProperty("expires")]
+        [JsonPropertyName("expires")]
         public string Expires { get; set; }
 
-        [JsonProperty("challenges")]
+        [JsonPropertyName("challenges")]
+        [JsonRequired]
         [Required]
         public Challenge[] Challenges { get; set; }
 
-        [JsonProperty("wildcard")]
+        [JsonPropertyName("wildcard")]
         public bool? Wildcard { get; set; }
     }
 }

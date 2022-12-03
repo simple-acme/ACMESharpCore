@@ -5,6 +5,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using ACMESharp.Crypto;
@@ -13,9 +15,6 @@ using ACMESharp.Logging;
 using ACMESharp.Protocol.Messages;
 using ACMESharp.Protocol.Resources;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using _Authorization = ACMESharp.Protocol.Resources.Authorization;
 
 namespace ACMESharp.Protocol
@@ -26,12 +25,6 @@ namespace ACMESharp.Protocol
     public class AcmeProtocolClient : IDisposable
     {
         private static readonly HttpStatusCode[] SkipExpectedStatuses = new HttpStatusCode[0];
-
-        private static readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
-        {
-            ContractResolver = new CamelCasePropertyNamesContractResolver()
-        };
-
         private bool _disposeHttpClient;
         private HttpClient _http;
         private ILogger _log;
@@ -811,8 +804,10 @@ namespace ACMESharp.Protocol
 
         async Task<T> Deserialize<T>(HttpResponseMessage resp)
         {
-            return JsonConvert.DeserializeObject<T>(
-                    await resp.Content.ReadAsStringAsync());
+            var content = await resp.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<T>(
+                    content, 
+                    new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
         }
 
         async Task<AcmeProtocolException> DecodeResponseErrorAsync(HttpResponseMessage resp,
@@ -966,27 +961,27 @@ namespace ACMESharp.Protocol
             else
                 protectedHeader["kid"] = Account.Kid;
 
-
-            // Nothing unprotected for now
-            var unprotectedHeader = (object)null; // new { };
-
             var payload = ResolvePayload(message);
-            var acmeSigned = JwsHelper.SignFlatJson(signer.Sign, payload,
-                    protectedHeader, unprotectedHeader);
+            var acmeSigned = JwsHelper.SignFlatJson(signer.Sign, payload, protectedHeader, null);
 
             return acmeSigned;
         }
 
         protected string ResolvePayload(object message)
         {
-            string payload;
-            if (message is string)
-                payload = (string)message;
-            else if (message is JObject)
-                payload = ((JObject)message).ToString(Formatting.None);
-            else
-                payload = JsonConvert.SerializeObject(message, Formatting.None);
-            return payload;
+            if (message is string str)
+            {
+                return str;
+            }
+            if (message is JsonObject jsonObject)
+            {
+                return jsonObject.ToString();
+            }
+            if (message is JsonElement jsonElement)
+            {
+                return jsonElement.ToString();
+            }
+            return JsonSerializer.Serialize(message);
         }
 
         #region IDisposable Support

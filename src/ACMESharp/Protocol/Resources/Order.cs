@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using ACMESharp.Protocol.Resources;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Resources
 {
@@ -10,35 +9,37 @@ namespace ACMESharp.Protocol.Resources
     /// </summary>
     public class Order
     {
-        [JsonProperty("status")]
+        [JsonPropertyName("status")]
         [Required]
         public string Status { get; set; }
 
-        [JsonProperty("expires")]
+        [JsonPropertyName("expires")]
         public string Expires { get; set; }
 
-        [JsonProperty("notBefore")]
+        [JsonPropertyName("notBefore")]
         public string NotBefore { get; set; }
 
-        [JsonProperty("notAfter")]
+        [JsonPropertyName("notAfter")]
         public string NotAfter { get; set; }
 
-        [JsonProperty("identifiers")]
+        [JsonPropertyName("identifiers")]
         [Required, MinLength(1)]
         public Identifier[] Identifiers { get; set; }
 
-        [JsonProperty("authorizations")]
+        [JsonPropertyName("authorizations")]
         [Required, MinLength(1)]
         public string[] Authorizations { get; set; }
 
-        [JsonProperty("finalize")]
+        [JsonPropertyName("finalize")]
         [Required]
         public string Finalize { get; set; }
 
-        [JsonProperty("certificate", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("certificate")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Certificate { get; set; }
-        
-        [JsonProperty("error", NullValueHandling = NullValueHandling.Ignore)]
+
+        [JsonPropertyName("error")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public Problem Error { get; set; }
     }
 }

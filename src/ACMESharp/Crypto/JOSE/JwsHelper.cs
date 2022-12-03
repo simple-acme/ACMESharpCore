@@ -1,7 +1,8 @@
-﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace ACMESharp.Crypto.JOSE
 {
@@ -55,8 +56,11 @@ namespace ACMESharp.Crypto.JOSE
         /// <param name="protectedHeaders"></param>
         /// <param name="unprotectedHeaders"></param>
         /// <returns>Returns a signed, structured object containing the input payload.</returns>
-        public static JwsSignedPayload SignFlatJsonAsObject(Func<byte[], byte[]> sigFunc, string payload,
-                object protectedHeaders = null, object unprotectedHeaders = null)
+        public static JwsSignedPayload SignFlatJsonAsObject(
+            Func<byte[], byte[]> sigFunc,
+            string payload,
+            Dictionary<string, object> protectedHeaders = null, 
+            Dictionary<string, object> unprotectedHeaders = null)
         {
             if (protectedHeaders == null && unprotectedHeaders == null)
                 throw new ArgumentException("at least one of protected or unprotected headers must be specified");
@@ -64,8 +68,7 @@ namespace ACMESharp.Crypto.JOSE
             string protectedHeadersSer = "";
             if (protectedHeaders != null)
             {
-                protectedHeadersSer = JsonConvert.SerializeObject(
-                        protectedHeaders, Formatting.None);
+                protectedHeadersSer = JsonSerializer.Serialize(protectedHeaders);
             }
 
             string payloadB64u = CryptoHelper.Base64.UrlEncode(Encoding.UTF8.GetBytes(payload));
@@ -87,11 +90,14 @@ namespace ACMESharp.Crypto.JOSE
 
             return jwsFlatJS;
         }
-        public static string SignFlatJson(Func<byte[], byte[]> sigFunc, string payload,
-                object protectedHeaders = null, object unprotectedHeaders = null)
+        public static string SignFlatJson(
+            Func<byte[], byte[]> sigFunc, 
+            string payload,
+            Dictionary<string, object> protectedHeaders = null, 
+            Dictionary<string, object> unprotectedHeaders = null)
         {
             var jwsFlatJS = SignFlatJsonAsObject(sigFunc, payload, protectedHeaders, unprotectedHeaders);
-            return JsonConvert.SerializeObject(jwsFlatJS, Formatting.None);
+            return JsonSerializer.Serialize(jwsFlatJS);
         }
 
         /// <summary>
@@ -105,7 +111,7 @@ namespace ACMESharp.Crypto.JOSE
             // and then produce a JSON object with no whitespace or line breaks
 
             var jwkCanon = signer.ExportJwk(true);
-            var jwkJson = JsonConvert.SerializeObject(jwkCanon, Formatting.None);
+            var jwkJson = JsonSerializer.Serialize(jwkCanon);
             var jwkBytes = Encoding.UTF8.GetBytes(jwkJson);
             var jwkHash = algor.ComputeHash(jwkBytes);
 

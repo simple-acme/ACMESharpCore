@@ -1,5 +1,5 @@
 using System.Security.Cryptography;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace ACMESharp.Crypto
 {
@@ -12,7 +12,7 @@ namespace ACMESharp.Crypto
         public RSA GenerateAlgorithm(string rsaKeys)
         {
             var rsa = RSA.Create();
-            var keys = JsonConvert.DeserializeObject<RsaKeys>(rsaKeys);
+            var keys = JsonSerializer.Deserialize<RsaKeys>(rsaKeys);
             var rsaParams = new RSAParameters
             {
                 D = keys.D,
@@ -42,7 +42,7 @@ namespace ACMESharp.Crypto
                 P = rsaParams.P,
                 Q = rsaParams.Q,
             };
-            var json = JsonConvert.SerializeObject(keys);
+            var json = JsonSerializer.Serialize(keys);
             return json;
         }
 

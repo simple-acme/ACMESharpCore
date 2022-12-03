@@ -1,23 +1,23 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace ACMESharp.Crypto.JOSE
 {
     public class JwsSignedPayload
     {
-        [JsonProperty("header", NullValueHandling = NullValueHandling.Ignore)]
-        public object Header
-        { get; set; }
+        [JsonPropertyName("header")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public object Header { get; set; }
 
-        [JsonProperty("protected", NullValueHandling = NullValueHandling.Ignore)]
-        public string Protected
-        { get; set; }
+        [JsonPropertyName("protected")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string Protected { get; set; }
 
-        [JsonProperty("payload", Required = Required.Always)]
-        public string Payload
-        { get; set; }
+        [JsonPropertyName("payload")]
+        [JsonRequired]
+        public string Payload { get; set; }
 
-        [JsonProperty("signature", Required = Required.Always)]
-        public string Signature
-        { get; set; }
+        [JsonPropertyName("signature")]
+        [JsonRequired]
+        public string Signature { get; set; }
     }
 }

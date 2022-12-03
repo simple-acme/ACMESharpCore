@@ -1,8 +1,8 @@
 using System;
-using System.IO;
 using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Xml;
-using Newtonsoft.Json;
 
 namespace ACMESharp.Crypto.JOSE.Impl
 {
@@ -107,7 +107,7 @@ namespace ACMESharp.Crypto.JOSE.Impl
         public void ImportJwk(string jwkJson)
         {
             Init();
-            var jwk = JsonConvert.DeserializeObject<RSJwk>(jwkJson);
+            var jwk = JsonSerializer.Deserialize<RSJwk>(jwkJson);
             var keyParams = new RSAParameters
             {
                 Exponent = CryptoHelper.Base64.UrlDecode(jwk.e),
@@ -130,14 +130,14 @@ namespace ACMESharp.Crypto.JOSE.Impl
         // JWK and are sorted in lexicographic order to produce a canonical form
         class RSJwk
         {
-            [JsonProperty(Order = 1)]
-            public string e;
+            [JsonPropertyOrder(1)]
+            public string e { get; set; }
 
-            [JsonProperty(Order = 2)]
-            public string kty = "RSA";
+            [JsonPropertyOrder(2)]
+            public string kty { get; set; } = "RSA";
 
-            [JsonProperty(Order = 3)]
-            public string n;
+            [JsonPropertyOrder(3)]
+            public string n { get; set; }
         }
 
 
