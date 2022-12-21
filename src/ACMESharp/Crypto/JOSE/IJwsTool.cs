@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace ACMESharp.Crypto.JOSE
@@ -18,7 +18,9 @@ namespace ACMESharp.Crypto.JOSE
 
         void Import(string exported);
 
-        object ExportJwk(bool canonical = false);
+        object ExportJwk();
+
+        string ExportEab();
 
         byte[] Sign(byte[] raw);
 

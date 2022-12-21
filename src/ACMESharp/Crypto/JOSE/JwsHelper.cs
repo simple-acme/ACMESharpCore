@@ -110,7 +110,7 @@ namespace ACMESharp.Crypto.JOSE
             // As per RFC 7638 Section 3, we export the JWK in a canonical form
             // and then produce a JSON object with no whitespace or line breaks
 
-            var jwkCanon = signer.ExportJwk(true);
+            var jwkCanon = signer.ExportJwk();
             var jwkJson = JsonSerializer.Serialize(jwkCanon);
             var jwkBytes = Encoding.UTF8.GetBytes(jwkJson);
             var jwkHash = algor.ComputeHash(jwkBytes);

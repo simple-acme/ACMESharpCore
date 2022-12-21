@@ -94,7 +94,7 @@ namespace ACMESharp.Crypto.JOSE.Impl
 
         }
 
-        public object ExportJwk(bool canonical = false)
+        public object ExportJwk()
         {
             // Note, we only produce a canonical form of the JWK
             // for export therefore we ignore the canonical param
@@ -111,6 +111,11 @@ namespace ACMESharp.Crypto.JOSE.Impl
             }
 
             return _jwk;
+        }
+
+        public string ExportEab()
+        {
+            return JsonSerializer.Serialize(ExportJwk());
         }
 
         public byte[] Sign(byte[] raw)
