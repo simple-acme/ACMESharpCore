@@ -59,7 +59,7 @@ namespace ACMESharp.Protocol.Resources
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string[] CaaIdentities { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string ExternalAccountRequired { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        public bool ExternalAccountRequired { get; set; }
     }
 }
