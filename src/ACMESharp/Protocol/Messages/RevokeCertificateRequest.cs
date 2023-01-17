@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using ACMESharp.Protocol.Resources;
 
@@ -11,7 +10,6 @@ namespace ACMESharp.Protocol.Messages
     {
         [JsonPropertyName("certificate")]
         [JsonRequired]
-        [Required]
         public string Certificate { get; set; }
 
         [JsonPropertyName("reason")]

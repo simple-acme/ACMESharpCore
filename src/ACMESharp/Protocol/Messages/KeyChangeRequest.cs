@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Messages
@@ -11,12 +10,10 @@ namespace ACMESharp.Protocol.Messages
     {
         [JsonPropertyName("account")]
         [JsonRequired]
-        [Required]
         public string Account { get; set; }
 
         [JsonPropertyName("oldKey")]
         [JsonRequired]
-        [Required]
         public object OldKey { get; set; }
     }
 }

@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Resources
@@ -10,7 +9,6 @@ namespace ACMESharp.Protocol.Resources
     public class Order
     {
         [JsonPropertyName("status")]
-        [Required]
         public string Status { get; set; }
 
         [JsonPropertyName("expires")]
@@ -23,15 +21,13 @@ namespace ACMESharp.Protocol.Resources
         public string NotAfter { get; set; }
 
         [JsonPropertyName("identifiers")]
-        [Required, MinLength(1)]
         public Identifier[] Identifiers { get; set; }
 
         [JsonPropertyName("authorizations")]
-        [Required, MinLength(1)]
         public string[] Authorizations { get; set; }
 
         [JsonPropertyName("finalize")]
-        [Required]
+        [JsonRequired]
         public string Finalize { get; set; }
 
         [JsonPropertyName("certificate")]

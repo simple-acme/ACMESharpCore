@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using ACMESharp.Protocol.Resources;
 
@@ -11,7 +10,6 @@ namespace ACMESharp.Protocol.Messages
     {
         [JsonPropertyName("identifiers")]
         [JsonRequired]
-        [Required, MinLength(1)]
         public Identifier[] Identifiers { get; set; }
 
         [JsonPropertyName("notBefore")]

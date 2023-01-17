@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Resources
@@ -10,12 +9,10 @@ namespace ACMESharp.Protocol.Resources
     {
         [JsonPropertyName("identifier")]
         [JsonRequired]
-        [Required]
         public Identifier Identifier { get; set; }
 
         [JsonPropertyName("status")]
         [JsonRequired]
-        [Required]
         public string Status { get; set; }
 
         [JsonPropertyName("expires")]
@@ -23,7 +20,6 @@ namespace ACMESharp.Protocol.Resources
 
         [JsonPropertyName("challenges")]
         [JsonRequired]
-        [Required]
         public Challenge[] Challenges { get; set; }
 
         [JsonPropertyName("wildcard")]
