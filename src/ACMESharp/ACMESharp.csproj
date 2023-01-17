@@ -1,11 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <Configurations>Debug;DebugTrimmed;Release;ReleaseTrimmed</Configurations>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
-
+  
+  <PropertyGroup Condition="'$(Configuration)'=='DebugTrimmed' OR '$(Configuration)'=='ReleaseTrimmed'">
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+  </PropertyGroup>
+  
   <!--
    - NuGet Pack
    -    https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets

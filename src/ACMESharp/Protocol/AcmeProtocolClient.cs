@@ -132,15 +132,13 @@ namespace ACMESharp.Protocol
 
             try
             {
-                using (var resp = await _http.GetAsync(tosUrl, cancel))
-                {
-                    var filename = resp.Content?.Headers?.ContentDisposition?.FileName;
-                    if (string.IsNullOrEmpty(filename))
-                        filename = new Uri(tosUrl).AbsolutePath;
-                    return (resp.Content.Headers.ContentType,
-                            Path.GetFileName(filename),
-                            await resp.Content.ReadAsByteArrayAsync());
-                }
+                using var resp = await _http.GetAsync(tosUrl, cancel);
+                var filename = resp.Content?.Headers?.ContentDisposition?.FileName;
+                if (string.IsNullOrEmpty(filename))
+                    filename = new Uri(tosUrl).AbsolutePath;
+                return (resp.Content.Headers.ContentType,
+                        Path.GetFileName(filename),
+                        await resp.Content.ReadAsByteArrayAsync());
             } 
             catch (Exception ex)
             {
@@ -627,10 +625,8 @@ namespace ACMESharp.Protocol
             OrderDetails order,
             CancellationToken cancel = default(CancellationToken))
         {
-            using (var resp = await GetAsync(order.Payload.Certificate, cancel))
-            {
-                return await resp.Content.ReadAsByteArrayAsync();
-            }
+            using var resp = await GetAsync(order.Payload.Certificate, cancel);
+            return await resp.Content.ReadAsByteArrayAsync();
         }
 
         /// <summary>
@@ -643,16 +639,14 @@ namespace ACMESharp.Protocol
             OrderDetails order,
             CancellationToken cancel = default)
         {
-            using (var resp = await GetAsync(order.Payload.Certificate, cancel))
+            using var resp = await GetAsync(order.Payload.Certificate, cancel);
+            var ret = new AcmeCertificate();
+            if (resp.Headers.TryGetValues("Link", out var linkValues))
             {
-                var ret = new AcmeCertificate();
-                if (resp.Headers.TryGetValues("Link", out var linkValues))
-                {
-                    ret.Links = new HTTP.LinkCollection(linkValues);
-                }
-                ret.Certificate = await resp.Content.ReadAsByteArrayAsync();
-                return ret;
+                ret.Links = new HTTP.LinkCollection(linkValues);
             }
+            ret.Certificate = await resp.Content.ReadAsByteArrayAsync();
+            return ret;
         }
 
         /// <summary>
