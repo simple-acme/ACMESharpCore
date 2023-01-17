@@ -12,7 +12,7 @@ namespace ACMESharp.Crypto
         public RSA GenerateAlgorithm(string rsaKeys)
         {
             var rsa = RSA.Create();
-            var keys = JsonSerializer.Deserialize<RsaKeys>(rsaKeys);
+            var keys = JsonSerializer.Deserialize(rsaKeys, AcmeJson.Default.RsaKeys);
             var rsaParams = new RSAParameters
             {
                 D = keys.D,
@@ -42,7 +42,7 @@ namespace ACMESharp.Crypto
                 P = rsaParams.P,
                 Q = rsaParams.Q,
             };
-            var json = JsonSerializer.Serialize(keys);
+            var json = JsonSerializer.Serialize(keys, AcmeJson.Default.RsaKeys);
             return json;
         }
 
@@ -50,7 +50,7 @@ namespace ACMESharp.Crypto
         // there is no standard format or method supported for .NET Standard/Core yet.
         //    https://github.com/dotnet/corefx/issues/23686
         //    https://gist.github.com/Jargon64/5b172c452827e15b21882f1d76a94be4/
-        private class RsaKeys
+        internal class RsaKeys
         {
             public byte[] Modulus { get; set; }
             public byte[] Exponent { get; set; }
