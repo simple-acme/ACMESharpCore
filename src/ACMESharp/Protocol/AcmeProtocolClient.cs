@@ -743,7 +743,7 @@ namespace ACMESharp.Protocol
             return acmeSigned;
         }
 
-        protected string ResolvePayload(object message)
+        protected static string ResolvePayload(object message)
         {
             if (message is string str)
             {
