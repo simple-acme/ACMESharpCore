@@ -10,14 +10,14 @@ namespace ACMESharp.Protocol.Messages
     {
         [JsonPropertyName("identifiers")]
         [JsonRequired]
-        public Identifier[] Identifiers { get; set; }
+        public Identifier[]? Identifiers { get; set; }
 
         [JsonPropertyName("notBefore")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string NotBefore { get; set; }
+        public string? NotBefore { get; set; }
 
         [JsonPropertyName("notAfter")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string NotAfter { get; set; }
+        public string? NotAfter { get; set; }
     }
 }

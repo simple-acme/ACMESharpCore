@@ -6,13 +6,13 @@ namespace ACMESharp.Protocol.Messages
     /// <summary>
     /// https://tools.ietf.org/html/draft-ietf-acme-acme-18#section-7.6
     /// </summary>
-    public class RevokeCertificateRequest
+    public record struct RevokeCertificateRequest
     {
         [JsonPropertyName("certificate")]
         [JsonRequired]
         public string Certificate { get; set; }
 
         [JsonPropertyName("reason")]
-        public RevokeReason Reason { get; set; } = RevokeReason.Unspecified;
+        public RevokeReason Reason { get; set; }
     }
 }

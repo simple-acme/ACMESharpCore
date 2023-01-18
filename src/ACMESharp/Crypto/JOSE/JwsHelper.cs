@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ACMESharp.Crypto.JOSE
 {
@@ -59,8 +60,8 @@ namespace ACMESharp.Crypto.JOSE
         public static JwsSignedPayload SignFlatJsonAsObject(
             Func<byte[], byte[]> sigFunc,
             string payload,
-            Dictionary<string, object> protectedHeaders = null, 
-            Dictionary<string, object> unprotectedHeaders = null)
+            Dictionary<string, object>? protectedHeaders = null, 
+            Dictionary<string, object>? unprotectedHeaders = null)
         {
             if (protectedHeaders == null && unprotectedHeaders == null)
                 throw new ArgumentException("at least one of protected or unprotected headers must be specified");
@@ -71,14 +72,14 @@ namespace ACMESharp.Crypto.JOSE
                 protectedHeadersSer = JsonSerializer.Serialize(protectedHeaders);
             }
 
-            string payloadB64u = CryptoHelper.Base64.UrlEncode(Encoding.UTF8.GetBytes(payload));
-            string protectedB64u = CryptoHelper.Base64.UrlEncode(Encoding.UTF8.GetBytes(protectedHeadersSer));
+            string payloadB64u = Base64Tool.UrlEncode(Encoding.UTF8.GetBytes(payload));
+            string protectedB64u = Base64Tool.UrlEncode(Encoding.UTF8.GetBytes(protectedHeadersSer));
 
             string signingInput = $"{protectedB64u}.{payloadB64u}";
             byte[] signingBytes = Encoding.ASCII.GetBytes(signingInput);
 
             byte[] sigBytes = sigFunc(signingBytes);
-            string sigB64u = CryptoHelper.Base64.UrlEncode(sigBytes);
+            string sigB64u = Base64Tool.UrlEncode(sigBytes);
 
             var jwsFlatJS = new JwsSignedPayload
             {
@@ -93,8 +94,8 @@ namespace ACMESharp.Crypto.JOSE
         public static string SignFlatJson(
             Func<byte[], byte[]> sigFunc, 
             string payload,
-            Dictionary<string, object> protectedHeaders = null, 
-            Dictionary<string, object> unprotectedHeaders = null)
+            Dictionary<string, object>? protectedHeaders = null, 
+            Dictionary<string, object>? unprotectedHeaders = null)
         {
             var jwsFlatJS = SignFlatJsonAsObject(sigFunc, payload, protectedHeaders, unprotectedHeaders);
             return JsonSerializer.Serialize(jwsFlatJS);
@@ -109,9 +110,7 @@ namespace ACMESharp.Crypto.JOSE
         {
             // As per RFC 7638 Section 3, we export the JWK in a canonical form
             // and then produce a JSON object with no whitespace or line breaks
-
-            var jwkCanon = signer.ExportJwk();
-            var jwkJson = JsonSerializer.Serialize(jwkCanon);
+            var jwkJson = signer.ExportEab();
             var jwkBytes = Encoding.UTF8.GetBytes(jwkJson);
             var jwkHash = algor.ComputeHash(jwkBytes);
 
@@ -127,7 +126,7 @@ namespace ACMESharp.Crypto.JOSE
         public static string ComputeKeyAuthorization(IJwsTool signer, string token)
         {
             using var sha = SHA256.Create();
-            var jwkThumb = CryptoHelper.Base64.UrlEncode(ComputeThumbprint(signer, sha));
+            var jwkThumb = Base64Tool.UrlEncode(ComputeThumbprint(signer, sha));
             return $"{token}.{jwkThumb}";
         }
 
@@ -139,10 +138,22 @@ namespace ACMESharp.Crypto.JOSE
         public static string ComputeKeyAuthorizationDigest(IJwsTool signer, string token)
         {
             using var sha = SHA256.Create();
-            var jwkThumb = CryptoHelper.Base64.UrlEncode(ComputeThumbprint(signer, sha));
+            var jwkThumb = Base64Tool.UrlEncode(ComputeThumbprint(signer, sha));
             var keyAuthz = $"{token}.{jwkThumb}";
             var keyAuthzDig = sha.ComputeHash(Encoding.UTF8.GetBytes(keyAuthz));
-            return CryptoHelper.Base64.UrlEncode(keyAuthzDig);
+            return Base64Tool.UrlEncode(keyAuthzDig);
+        }
+
+        public class ProtectedHeader
+        {
+            [JsonPropertyName("alg")]
+            public string? Algorithm { get; set; }
+
+            [JsonPropertyName("url")]
+            public string? Url { get; set; }
+
+            [JsonPropertyName("nonce")]
+            public string? Nonce { get; set; }
         }
     }
 }

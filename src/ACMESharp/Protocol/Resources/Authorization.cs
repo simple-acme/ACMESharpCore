@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Resources
@@ -5,7 +6,7 @@ namespace ACMESharp.Protocol.Resources
     /// <summary>
     /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.1.4
     /// </summary>
-    public class Authorization
+    public record struct Authorization
     {
         [JsonPropertyName("identifier")]
         [JsonRequired]
@@ -20,7 +21,7 @@ namespace ACMESharp.Protocol.Resources
 
         [JsonPropertyName("challenges")]
         [JsonRequired]
-        public Challenge[] Challenges { get; set; }
+        public IEnumerable<Challenge> Challenges { get; set; }
 
         [JsonPropertyName("wildcard")]
         public bool? Wildcard { get; set; }

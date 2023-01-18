@@ -10,7 +10,7 @@ namespace ACMESharp.Protocol.Messages
     {
         [JsonPropertyName("contact")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public IEnumerable<string> Contact { get; set; }
+        public IEnumerable<string>? Contact { get; set; }
 
         [JsonPropertyName("termsOfServiceAgreed")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -22,6 +22,6 @@ namespace ACMESharp.Protocol.Messages
 
         [JsonPropertyName("externalAccountBinding")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public object ExternalAccountBinding { get; set; }
+        public object? ExternalAccountBinding { get; set; }
     }
 }

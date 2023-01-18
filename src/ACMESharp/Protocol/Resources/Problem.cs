@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Resources
 {
-    public class Problem
+    public record struct Problem
     {
         public const string StandardProblemTypeNamespace = "urn:ietf:params:acme:error:";
 

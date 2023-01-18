@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Resources
 {
-    public class Challenge
+    public record struct Challenge
     {
         [JsonPropertyName("type")]
         public string Type { get; set; }

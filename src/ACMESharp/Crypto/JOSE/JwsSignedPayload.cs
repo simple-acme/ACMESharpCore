@@ -2,15 +2,15 @@ using System.Text.Json.Serialization;
 
 namespace ACMESharp.Crypto.JOSE
 {
-    public class JwsSignedPayload
+    public struct JwsSignedPayload
     {
         [JsonPropertyName("header")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public object Header { get; set; }
+        public object? Header { get; set; }
 
         [JsonPropertyName("protected")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string Protected { get; set; }
+        public string? Protected { get; set; }
 
         [JsonPropertyName("payload")]
         [JsonRequired]

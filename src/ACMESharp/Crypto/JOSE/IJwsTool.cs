@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 
 namespace ACMESharp.Crypto.JOSE
 {
@@ -9,8 +8,7 @@ namespace ACMESharp.Crypto.JOSE
     /// </summary>
     public interface IJwsTool : IDisposable
     {
-        string JwsAlg
-        { get; }
+        string JwsAlg { get; }
 
         void Init();
 
@@ -18,12 +16,16 @@ namespace ACMESharp.Crypto.JOSE
 
         void Import(string exported);
 
-        object ExportJwk();
-
         string ExportEab();
 
         byte[] Sign(byte[] raw);
 
         bool Verify(byte[] raw, byte[] sig);
     }
+
+    public interface IJwsTool<TJwk> : IJwsTool
+    {
+        TJwk ExportJwk();
+    }
+
 }

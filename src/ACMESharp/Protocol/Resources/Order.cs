@@ -6,7 +6,7 @@ namespace ACMESharp.Protocol.Resources
     /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.1.3
     /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.3
     /// </summary>
-    public class Order
+    public record struct Order
     {
         [JsonPropertyName("status")]
         public string Status { get; set; }
@@ -31,11 +31,11 @@ namespace ACMESharp.Protocol.Resources
         public string Finalize { get; set; }
 
         [JsonPropertyName("certificate")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public string Certificate { get; set; }
 
         [JsonPropertyName("error")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public Problem Error { get; set; }
     }
 }

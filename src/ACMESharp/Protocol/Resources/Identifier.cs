@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Resources
 {
-    public class Identifier
+    public record struct Identifier
     {
         [JsonPropertyName("type")]
         [JsonRequired]

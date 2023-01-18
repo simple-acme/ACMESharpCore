@@ -3,7 +3,7 @@ namespace ACMESharp.Authorizations
     /// <summary>
     /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-8.3
     /// </summary>
-    public class Http01ChallengeValidationDetails : IChallengeValidationDetails
+    public record struct Http01ChallengeValidationDetails : IChallengeValidationDetails
     {
         public const string Http01ChallengeType = "http-01";
         // URL template:

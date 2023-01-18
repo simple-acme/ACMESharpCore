@@ -11,7 +11,7 @@ namespace ACMESharp.Protocol
     /// to several ACME operations regarding an ACME Order, such as 
     /// Order creation and finalization.
     /// </remarks>
-    public class OrderDetails
+    public record struct OrderDetails
     {
         public Order Payload { get; set; }
 
