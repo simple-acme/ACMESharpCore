@@ -66,20 +66,20 @@ namespace ACMESharp.Crypto.JOSE
             if (protectedHeaders == null && unprotectedHeaders == null)
                 throw new ArgumentException("at least one of protected or unprotected headers must be specified");
 
-            string protectedHeadersSer = "";
+            var protectedHeadersSer = "";
             if (protectedHeaders != null)
             {
                 protectedHeadersSer = JsonSerializer.Serialize(protectedHeaders);
             }
 
-            string payloadB64u = Base64Tool.UrlEncode(Encoding.UTF8.GetBytes(payload));
-            string protectedB64u = Base64Tool.UrlEncode(Encoding.UTF8.GetBytes(protectedHeadersSer));
+            var payloadB64u = Base64Tool.UrlEncode(Encoding.UTF8.GetBytes(payload));
+            var protectedB64u = Base64Tool.UrlEncode(Encoding.UTF8.GetBytes(protectedHeadersSer));
 
-            string signingInput = $"{protectedB64u}.{payloadB64u}";
-            byte[] signingBytes = Encoding.ASCII.GetBytes(signingInput);
+            var signingInput = $"{protectedB64u}.{payloadB64u}";
+            var signingBytes = Encoding.ASCII.GetBytes(signingInput);
 
-            byte[] sigBytes = sigFunc(signingBytes);
-            string sigB64u = Base64Tool.UrlEncode(sigBytes);
+            var sigBytes = sigFunc(signingBytes);
+            var sigB64u = Base64Tool.UrlEncode(sigBytes);
 
             var jwsFlatJS = new JwsSignedPayload
             {
@@ -98,7 +98,7 @@ namespace ACMESharp.Crypto.JOSE
             Dictionary<string, object>? unprotectedHeaders = null)
         {
             var jwsFlatJS = SignFlatJsonAsObject(sigFunc, payload, protectedHeaders, unprotectedHeaders);
-            return JsonSerializer.Serialize(jwsFlatJS);
+            return JsonSerializer.Serialize(jwsFlatJS, AcmeJson.Insensitive.JwsSignedPayload);
         }
 
         /// <summary>

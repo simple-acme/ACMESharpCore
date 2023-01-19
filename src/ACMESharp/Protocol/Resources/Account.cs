@@ -4,7 +4,7 @@ namespace ACMESharp.Protocol.Resources
     /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.1.2
     /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.3
     /// </summary>
-    public struct Account
+    public record struct Account
     {
         public string Id { get; set; }
 
