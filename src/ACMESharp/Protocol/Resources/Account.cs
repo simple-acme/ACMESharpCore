@@ -8,8 +8,6 @@ namespace ACMESharp.Protocol.Resources
     {
         public string Id { get; set; }
 
-        public object Key { get; set; }
-
         public string[] Contact { get; set; }
 
         public string Status { get; set; }

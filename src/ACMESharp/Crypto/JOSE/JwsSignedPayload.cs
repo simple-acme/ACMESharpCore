@@ -4,10 +4,6 @@ namespace ACMESharp.Crypto.JOSE
 {
     public struct JwsSignedPayload
     {
-        [JsonPropertyName("header")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public object? Header { get; set; }
-
         [JsonPropertyName("protected")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Protected { get; set; }

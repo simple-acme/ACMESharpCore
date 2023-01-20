@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace ACMESharp.Crypto.JOSE
 {
@@ -16,7 +15,7 @@ namespace ACMESharp.Crypto.JOSE
     /// JWS JSON Serialization</see> format, and so this helper class' scope and
     /// implementation of JWS is limited to those features required for ACME.
     /// </remarks>
-    public static class JwsHelper
+    public static partial class JwsHelper
     {
         /*
          *  In the JWS JSON Serialization, a JWS is represented as a JSON object
@@ -55,25 +54,17 @@ namespace ACMESharp.Crypto.JOSE
         /// <param name="sigFunc"></param>
         /// <param name="payload"></param>
         /// <param name="protectedHeaders"></param>
-        /// <param name="unprotectedHeaders"></param>
         /// <returns>Returns a signed, structured object containing the input payload.</returns>
         public static JwsSignedPayload SignFlatJsonAsObject(
             Func<byte[], byte[]> sigFunc,
             string payload,
-            Dictionary<string, object>? protectedHeaders = null, 
-            Dictionary<string, object>? unprotectedHeaders = null)
+            string? protectedHeaders)
         {
-            if (protectedHeaders == null && unprotectedHeaders == null)
+            if (protectedHeaders == null)
                 throw new ArgumentException("at least one of protected or unprotected headers must be specified");
 
-            var protectedHeadersSer = "";
-            if (protectedHeaders != null)
-            {
-                protectedHeadersSer = JsonSerializer.Serialize(protectedHeaders);
-            }
-
             var payloadB64u = Base64Tool.UrlEncode(Encoding.UTF8.GetBytes(payload));
-            var protectedB64u = Base64Tool.UrlEncode(Encoding.UTF8.GetBytes(protectedHeadersSer));
+            var protectedB64u = Base64Tool.UrlEncode(Encoding.UTF8.GetBytes(protectedHeaders ?? ""));
 
             var signingInput = $"{protectedB64u}.{payloadB64u}";
             var signingBytes = Encoding.ASCII.GetBytes(signingInput);
@@ -83,22 +74,12 @@ namespace ACMESharp.Crypto.JOSE
 
             var jwsFlatJS = new JwsSignedPayload
             {
-                Header = unprotectedHeaders,
                 Protected = protectedB64u,
                 Payload = payloadB64u,
                 Signature = sigB64u
             };
 
             return jwsFlatJS;
-        }
-        public static string SignFlatJson(
-            Func<byte[], byte[]> sigFunc, 
-            string payload,
-            Dictionary<string, object>? protectedHeaders = null, 
-            Dictionary<string, object>? unprotectedHeaders = null)
-        {
-            var jwsFlatJS = SignFlatJsonAsObject(sigFunc, payload, protectedHeaders, unprotectedHeaders);
-            return JsonSerializer.Serialize(jwsFlatJS, AcmeJson.Insensitive.JwsSignedPayload);
         }
 
         /// <summary>
@@ -142,18 +123,6 @@ namespace ACMESharp.Crypto.JOSE
             var keyAuthz = $"{token}.{jwkThumb}";
             var keyAuthzDig = sha.ComputeHash(Encoding.UTF8.GetBytes(keyAuthz));
             return Base64Tool.UrlEncode(keyAuthzDig);
-        }
-
-        public class ProtectedHeader
-        {
-            [JsonPropertyName("alg")]
-            public string? Algorithm { get; set; }
-
-            [JsonPropertyName("url")]
-            public string? Url { get; set; }
-
-            [JsonPropertyName("nonce")]
-            public string? Nonce { get; set; }
         }
     }
 }

@@ -20,10 +20,6 @@ namespace ACMESharp.Protocol.Messages
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public bool? TermsOfServiceAgreed { get; set; }
 
-        [JsonPropertyName("externalAccountBinding")]
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public object? ExternalAccountBinding { get; set; }
-
         [JsonPropertyName("status")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Status { get; set; }

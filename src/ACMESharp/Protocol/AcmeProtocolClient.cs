@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
@@ -14,6 +16,7 @@ using ACMESharp.Protocol.Messages;
 using ACMESharp.Protocol.Resources;
 using static ACMESharp.Crypto.JOSE.Impl.ESJwsTool;
 using static ACMESharp.Crypto.JOSE.Impl.RSJwsTool;
+using static ACMESharp.Crypto.JOSE.JwsHelper;
 using Authorization = ACMESharp.Protocol.Resources.Authorization;
 
 namespace ACMESharp.Protocol
@@ -113,12 +116,12 @@ namespace ACMESharp.Protocol
                         Path.GetFileName(filename),
                         await resp.Content.ReadAsByteArrayAsync()
                     );
-                } 
+                }
                 else
                 {
                     return (null, null, null);
                 }
-            } 
+            }
             catch (Exception ex)
             {
                 throw new Exception($"Error retrieving terms of service from {tosUrl}", ex);
@@ -160,7 +163,7 @@ namespace ACMESharp.Protocol
         public async Task<AccountDetails> CreateAccountAsync(
             IEnumerable<string>? contacts = null,
             bool termsOfServiceAgreed = false,
-            object? externalAccountBinding = null)
+            JwsSignedPayload? externalAccountBinding = null)
         {
             var message = new CreateAccountRequest
             {
@@ -221,7 +224,7 @@ namespace ACMESharp.Protocol
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.3.3
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.3.4
         /// </remarks>
-        public async Task<AccountDetails> UpdateAccountAsync(IEnumerable<string>? contacts = null, object? externalAccountBinding = null)
+        public async Task<AccountDetails> UpdateAccountAsync(IEnumerable<string>? contacts = null)
         {
             if (Account == null)
             {
@@ -230,8 +233,7 @@ namespace ACMESharp.Protocol
             var requUrl = new Uri(_http.BaseAddress!, Account.Value.Kid);
             var message = new UpdateAccountRequest
             {
-                Contact = contacts,
-                ExternalAccountBinding = externalAccountBinding,
+                Contact = contacts
             };
             var resp = await SendAcmeAsync(
                     requUrl,
@@ -273,7 +275,7 @@ namespace ACMESharp.Protocol
                     OldKey = rsa.ExportJwk(),
                 };
                 innerPayload = ComputeAcmeSigned(req, AcmeJson.Default.KeyChangeRequestRSJwk, requUrl.ToString(), signer: newSigner, includePublicKey: true, excludeNonce: true);
-            } 
+            }
             else if (Signer is IJwsTool<ESJwk> ec)
             {
                 var req = new KeyChangeRequest<ESJwk>()
@@ -481,7 +483,7 @@ namespace ACMESharp.Protocol
         /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-18#section-7.6
         /// </remarks>
-        public async Task RevokeCertificateAsync(byte[] derEncodedCertificate, RevokeReason reason = RevokeReason.Unspecified)
+        public async Task<bool> RevokeCertificateAsync(byte[] derEncodedCertificate, RevokeReason reason = RevokeReason.Unspecified)
         {
             var message = new RevokeCertificateRequest
             {
@@ -497,6 +499,7 @@ namespace ACMESharp.Protocol
                     method: HttpMethod.Post,
                     message: message,
                     expectedStatuses: new[] { HttpStatusCode.OK });
+            return true;
         }
 
         /// <summary>
@@ -536,11 +539,11 @@ namespace ACMESharp.Protocol
         ///         response details for possible error or problem result</returns>
         async Task<HttpResponseMessage> SendAcmeAsync(
             Uri uri,
-            HttpMethod? method = null, 
+            HttpMethod? method = null,
             string? message = null,
             HttpStatusCode[]? expectedStatuses = null,
             bool skipNonce = false,
-            [System.Runtime.CompilerServices.CallerMemberName]string opName = "")
+            [System.Runtime.CompilerServices.CallerMemberName] string opName = "")
         {
             if (method == null)
                 method = HttpMethod.Get;
@@ -651,7 +654,7 @@ namespace ACMESharp.Protocol
 
         static async Task<AcmeProtocolException> DecodeResponseErrorAsync(HttpResponseMessage resp,
             string? message = null,
-            [System.Runtime.CompilerServices.CallerMemberName]string opName = "")
+            [System.Runtime.CompilerServices.CallerMemberName] string opName = "")
         {
             string? msg = null;
             Problem? problem = null;
@@ -739,38 +742,44 @@ namespace ACMESharp.Protocol
             bool excludeNonce = false)
         {
             signer ??= Signer;
-
-            var protectedHeader = new Dictionary<string, object>
+            var protectedHeaderSer = "";
+            if (signer is IJwsTool<RSJwk> rs)
             {
-                ["alg"] = signer.JwsAlg,
-                ["url"] = requUrl,
+                var protectedHeader = CreateProtectedHeader(rs, requUrl, includePublicKey, excludeNonce);
+                protectedHeaderSer = JsonSerializer.Serialize(protectedHeader, AcmeJson.Insensitive.ProtectedHeaderRSJwk);
+            }
+            else if (signer is IJwsTool<ESJwk> es)
+            {
+                var protectedHeader = CreateProtectedHeader(es, requUrl, includePublicKey, excludeNonce);
+                protectedHeaderSer = JsonSerializer.Serialize(protectedHeader, AcmeJson.Insensitive.ProtectedHeaderESJwk);
+            }
+            var payload = JsonSerializer.Serialize(message, typeInfo);
+            var jwsFlatJS = SignFlatJsonAsObject(signer.Sign, payload, protectedHeaderSer);
+            return JsonSerializer.Serialize(jwsFlatJS, AcmeJson.Insensitive.JwsSignedPayload);
+        }
+
+        protected ProtectedHeader<T> CreateProtectedHeader<T>(IJwsTool<T> signer, string url, bool includePublicKey, bool excludeNonce) 
+        {
+            var protectedHeader = new ProtectedHeader<T>()
+            {
+                Algorithm = signer.JwsAlg,
+                Url = url
             };
+            if (includePublicKey)
+            {
+                protectedHeader.Key = signer.ExportJwk();
+            }
+            else
+            {
+                protectedHeader.KeyIdentifier = Account?.Kid ?? throw new InvalidOperationException();
+            }
             if (!excludeNonce)
             {
                 if (string.IsNullOrEmpty(NextNonce))
                     throw new Exception("missing next nonce needed to sign request payload");
-                protectedHeader["nonce"] = NextNonce;
+                protectedHeader.Nonce = NextNonce;
             }
-
-            if (includePublicKey)
-            { 
-                if (signer is IJwsTool<RSJwk> rs)
-                {
-                    protectedHeader["jwk"] = rs.ExportJwk();
-                }
-                else if (signer is IJwsTool<ESJwk> es)
-                {
-                    protectedHeader["jwk"] = es.ExportJwk();
-                }
-            }
-            else
-            {
-                protectedHeader["kid"] = Account?.Kid ?? throw new InvalidOperationException();
-            }
-
-            var payload = JsonSerializer.Serialize(message, typeInfo);
-            var acmeSigned = JwsHelper.SignFlatJson(signer.Sign, payload, protectedHeader, null);
-            return acmeSigned;
+            return protectedHeader;
         }
     }
 }

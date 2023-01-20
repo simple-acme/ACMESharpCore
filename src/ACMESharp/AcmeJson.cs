@@ -5,6 +5,7 @@ using ACMESharp.Protocol.Messages;
 using ACMESharp.Protocol.Resources;
 using static ACMESharp.Crypto.JOSE.Impl.ESJwsTool;
 using static ACMESharp.Crypto.JOSE.Impl.RSJwsTool;
+using static ACMESharp.Crypto.JOSE.JwsHelper;
 
 namespace ACMESharp
 {
@@ -19,6 +20,8 @@ namespace ACMESharp
     [JsonSerializable(typeof(Authorization))]
     [JsonSerializable(typeof(KeyChangeRequest<RSJwk>))]
     [JsonSerializable(typeof(KeyChangeRequest<ESJwk>))]
+    [JsonSerializable(typeof(ProtectedHeader<RSJwk>))]
+    [JsonSerializable(typeof(ProtectedHeader<ESJwk>))]
     [JsonSerializable(typeof(CreateAccountRequest))]
     [JsonSerializable(typeof(CheckAccountRequest))]
     [JsonSerializable(typeof(UpdateAccountRequest))]
@@ -26,7 +29,8 @@ namespace ACMESharp
     [JsonSerializable(typeof(CreateOrderRequest))]
     [JsonSerializable(typeof(FinalizeOrderRequest))]
     [JsonSerializable(typeof(RevokeCertificateRequest))]
-    internal partial class AcmeJson : JsonSerializerContext
+    [JsonSerializable(typeof(ProtectedHeader))]
+    public partial class AcmeJson : JsonSerializerContext
     {
         public static AcmeJson Insensitive
         {
