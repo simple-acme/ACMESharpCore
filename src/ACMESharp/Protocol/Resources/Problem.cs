@@ -2,21 +2,21 @@ using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Resources
 {
-    public record struct Problem
+    public class Problem
     {
         public const string StandardProblemTypeNamespace = "urn:ietf:params:acme:error:";
 
         [JsonPropertyName("type")]
         [JsonRequired()]
-        public string Type { get; set; }
+        public string? Type { get; set; }
 
         [JsonPropertyName("detail")]
-        public string Detail { get; set; }
+        public string? Detail { get; set; }
 
         [JsonPropertyName("status")]
         public int? Status { get; set; }
 
         [JsonPropertyName("instance")]
-        public string Instance { get; set; }
+        public string? Instance { get; set; }
     }
 }

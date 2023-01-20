@@ -6,36 +6,36 @@ namespace ACMESharp.Protocol.Resources
     /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.1.3
     /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.3
     /// </summary>
-    public record struct Order
+    public class AcmeOrder
     {
         [JsonPropertyName("status")]
-        public string Status { get; set; }
+        public string? Status { get; set; }
 
         [JsonPropertyName("expires")]
-        public string Expires { get; set; }
+        public string? Expires { get; set; }
 
         [JsonPropertyName("notBefore")]
-        public string NotBefore { get; set; }
+        public string? NotBefore { get; set; }
 
         [JsonPropertyName("notAfter")]
-        public string NotAfter { get; set; }
+        public string? NotAfter { get; set; }
 
         [JsonPropertyName("identifiers")]
-        public Identifier[] Identifiers { get; set; }
+        public AcmeIdentifier[]? Identifiers { get; set; }
 
         [JsonPropertyName("authorizations")]
-        public string[] Authorizations { get; set; }
+        public string[]? Authorizations { get; set; }
 
         [JsonPropertyName("finalize")]
         [JsonRequired]
-        public string Finalize { get; set; }
+        public string? Finalize { get; set; }
 
         [JsonPropertyName("certificate")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public string Certificate { get; set; }
+        public string? Certificate { get; set; }
 
         [JsonPropertyName("error")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
-        public Problem Error { get; set; }
+        public Problem? Error { get; set; }
     }
 }

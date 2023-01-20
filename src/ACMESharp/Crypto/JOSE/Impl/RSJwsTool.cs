@@ -51,6 +51,7 @@ namespace ACMESharp.Crypto.JOSE.Impl
             _rsa = null;
             _sha?.Dispose();
             _sha = null;
+            GC.SuppressFinalize(this);
         }
 
         public string Export()
@@ -90,7 +91,7 @@ namespace ACMESharp.Crypto.JOSE.Impl
                 };
             }
 
-            return _jwk.Value;
+            return _jwk;
         }
 
         public string ExportEab()
@@ -102,6 +103,10 @@ namespace ACMESharp.Crypto.JOSE.Impl
         {
             Init();
             var jwk = JsonSerializer.Deserialize(jwkJson, AcmeJson.Insensitive.RSJwk);
+            if (jwk == null)
+            {
+                throw new InvalidOperationException();
+            }
             var keyParams = new RSAParameters
             {
                 Exponent = Base64Tool.UrlDecode(jwk.E),
@@ -134,19 +139,19 @@ namespace ACMESharp.Crypto.JOSE.Impl
 
         // As per RFC 7638 Section 3, these are the *required* elements of the
         // JWK and are sorted in lexicographic order to produce a canonical form
-        public struct RSJwk
+        public class RSJwk
         {
             [JsonPropertyOrder(1)]
             [JsonPropertyName("e")]
-            public string E { get; set; }
+            public string E { get; set; } = "";
 
             [JsonPropertyOrder(2)]
             [JsonPropertyName("kty")]
-            public string Kty { get; set; }
+            public string Kty { get; set; } = "";
 
             [JsonPropertyOrder(3)]
             [JsonPropertyName("n")]
-            public string N { get; set; }
+            public string N { get; set; } = "";
         }
     }
 }

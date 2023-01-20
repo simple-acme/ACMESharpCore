@@ -2,14 +2,14 @@ using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Resources
 {
-    public record struct Identifier
+    public class AcmeIdentifier
     {
         [JsonPropertyName("type")]
         [JsonRequired]
-        public string Type { get; set; }
+        public string Type { get; set; } = "";
 
         [JsonPropertyName("value")]
         [JsonRequired]
-        public string Value { get; set; }
+        public string Value { get; set; } = "";
     }
 }

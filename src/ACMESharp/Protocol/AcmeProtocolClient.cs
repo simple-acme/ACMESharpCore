@@ -15,7 +15,7 @@ using ACMESharp.Protocol.Resources;
 using static ACMESharp.Crypto.JOSE.Impl.ESJwsTool;
 using static ACMESharp.Crypto.JOSE.Impl.RSJwsTool;
 using static ACMESharp.Crypto.JOSE.JwsHelper;
-using Authorization = ACMESharp.Protocol.Resources.Authorization;
+using AcmeAuthorization = ACMESharp.Protocol.Resources.AcmeAuthorization;
 
 namespace ACMESharp.Protocol
 {
@@ -80,7 +80,7 @@ namespace ACMESharp.Protocol
         /// </remarks>
         public async Task<ServiceDirectory?> GetDirectoryAsync(string relativeUri)
         {
-            var ret = await SendAcmeAsync(new Uri(_http.BaseAddress!, relativeUri ?? ""), AcmeJson.Insensitive.ServiceDirectory, skipNonce: true);
+            var ret = await SendAcmeAsync(relativeUri, AcmeJson.Insensitive.ServiceDirectory, method: HttpMethod.Get);
             return ret.Value;
         }
 
@@ -145,7 +145,7 @@ namespace ACMESharp.Protocol
                 throw new InvalidOperationException();
             }
             _ = await SendAcmeAsync(
-                    new Uri(Directory.NewNonce),
+                    Directory.NewNonce,
                     method: HttpMethod.Head,
                     expectedStatuses: new[] {
                         HttpStatusCode.OK,
@@ -163,6 +163,10 @@ namespace ACMESharp.Protocol
             bool termsOfServiceAgreed = false,
             JwsSignedPayload? externalAccountBinding = null)
         {
+            if (string.IsNullOrWhiteSpace(Directory.NewAccount))
+            {
+                throw new NotSupportedException();
+            }
             var message = new CreateAccountRequest
             {
                 Contact = contacts,
@@ -170,10 +174,9 @@ namespace ACMESharp.Protocol
                 ExternalAccountBinding = externalAccountBinding,
             };
             var resp = await SendAcmeAsync(
-                new Uri(_http.BaseAddress!, Directory.NewAccount),
-                AcmeJson.Default.CreateAccountRequest,
-                AcmeJson.Default.Account,
-                method: HttpMethod.Post,
+                Directory.NewAccount,
+                AcmeJson.Insensitive.CreateAccountRequest,
+                AcmeJson.Insensitive.Account,
                 message: message,
                 expectedStatuses: new[] { HttpStatusCode.Created, HttpStatusCode.OK },
                 includePublicKey: true);
@@ -196,11 +199,14 @@ namespace ACMESharp.Protocol
         /// </remarks>
         public async Task<AccountDetails> CheckAccountAsync()
         {
+            if (string.IsNullOrWhiteSpace(Directory.NewAccount))
+            {
+                throw new NotSupportedException();
+            }
             var resp = await SendAcmeAsync(
-                    new Uri(_http.BaseAddress!, Directory.NewAccount),
-                    requestType: AcmeJson.Default.CheckAccountRequest,
-                    responseType: AcmeJson.Default.Account,
-                    method: HttpMethod.Post,
+                    Directory.NewAccount,
+                    requestType: AcmeJson.Insensitive.CheckAccountRequest,
+                    responseType: AcmeJson.Insensitive.Account,
                     message: new CheckAccountRequest(),
                     expectedStatuses: SkipExpectedStatuses,
                     includePublicKey: true);
@@ -228,16 +234,14 @@ namespace ACMESharp.Protocol
             {
                 throw new InvalidOperationException();
             }
-            var requUrl = new Uri(_http.BaseAddress!, Account.Value.Kid);
             var message = new UpdateAccountRequest
             {
                 Contact = contacts
             };
             var resp = await SendAcmeAsync(
-                    requUrl,
-                    requestType: AcmeJson.Default.UpdateAccountRequest,
-                    responseType: AcmeJson.Default.Account,
-                    method: HttpMethod.Post,
+                    Account.Value.Kid,
+                    requestType: AcmeJson.Insensitive.UpdateAccountRequest,
+                    responseType: AcmeJson.Insensitive.Account,
                     message: message);
 
             return DecodeAccountResponse(resp, existing: Account);
@@ -262,7 +266,10 @@ namespace ACMESharp.Protocol
                 Signer = newSigner;
                 return null;
             }
-
+            if (string.IsNullOrWhiteSpace(Directory.KeyChange))
+            {
+                throw new NotSupportedException();
+            }
             var requUrl = new Uri(_http.BaseAddress!, Directory.KeyChange);
             string? innerPayload;
             if (Signer is IJwsTool<RSJwk> rsa)
@@ -272,7 +279,8 @@ namespace ACMESharp.Protocol
                     Account = Account.Value.Kid,
                     OldKey = rsa.ExportJwk(),
                 };
-                innerPayload = ComputeAcmeSigned(req, AcmeJson.Default.KeyChangeRequestRSJwk, requUrl.ToString(), signer: newSigner, includePublicKey: true, excludeNonce: true);
+                var serialized = JsonSerializer.Serialize(req, AcmeJson.Insensitive.KeyChangeRequestRSJwk);
+                innerPayload = ComputeAcmeSigned(serialized, requUrl.ToString(), signer: newSigner, includePublicKey: true, excludeNonce: true);
             }
             else if (Signer is IJwsTool<ESJwk> ec)
             {
@@ -281,7 +289,8 @@ namespace ACMESharp.Protocol
                     Account = Account.Value.Kid,
                     OldKey = ec.ExportJwk(),
                 };
-                innerPayload = ComputeAcmeSigned(req, AcmeJson.Default.KeyChangeRequestESJwk, requUrl.ToString(), signer: newSigner, includePublicKey: true, excludeNonce: true);
+                var serialized = JsonSerializer.Serialize(req, AcmeJson.Insensitive.KeyChangeRequestESJwk);
+                innerPayload = ComputeAcmeSigned(serialized, requUrl.ToString(), signer: newSigner, includePublicKey: true, excludeNonce: true);
             }
             else
             {
@@ -289,9 +298,8 @@ namespace ACMESharp.Protocol
             }
 
             var resp = await SendAcmeAsync(
-                    requUrl,
-                    AcmeJson.Default.Account,
-                    method: HttpMethod.Post,
+                    Directory.KeyChange,
+                    AcmeJson.Insensitive.Account,
                     message: innerPayload);
 
             Signer = newSigner;
@@ -300,8 +308,8 @@ namespace ACMESharp.Protocol
         }
 
         /// <summary>
-        /// Creates a new Order for a Certificate which will contain one or more
-        /// DNS Identifiers.  The first Identifier will be treated as the primary
+        /// Creates a new AcmeOrder for a Certificate which will contain one or more
+        /// DNS Identifiers.  The first AcmeIdentifier will be treated as the primary
         /// subject of the certificate, and any optional subsequent Identifiers
         /// will be treated as Subject Alterative Name (SAN) entries.
         /// </summary>
@@ -309,8 +317,12 @@ namespace ACMESharp.Protocol
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.4
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.1.3
         /// </remarks>
-        public async Task<OrderDetails> CreateOrderAsync(IEnumerable<Identifier> identifiers, DateTime? notBefore = null, DateTime? notAfter = null)
+        public async Task<AcmeOrderDetails> CreateOrderAsync(IEnumerable<AcmeIdentifier> identifiers, DateTime? notBefore = null, DateTime? notAfter = null)
         {
+            if (string.IsNullOrEmpty(Directory.NewOrder))
+            {
+                throw new NotSupportedException();
+            }
             var message = new CreateOrderRequest
             {
                 Identifiers = identifiers.ToArray(),
@@ -318,10 +330,9 @@ namespace ACMESharp.Protocol
                 NotAfter = notAfter?.ToString(Constants.Rfc3339DateTimeFormat),
             };
             var resp = await SendAcmeAsync(
-                    new Uri(_http.BaseAddress!, Directory.NewOrder),
+                    Directory.NewOrder,
                     requestType: AcmeJson.Insensitive.CreateOrderRequest,
-                    responseType: AcmeJson.Insensitive.Order,
-                    method: HttpMethod.Post,
+                    responseType: AcmeJson.Insensitive.AcmeOrder,
                     message: message,
                     expectedStatuses: new[] { HttpStatusCode.Created, HttpStatusCode.OK });
 
@@ -329,76 +340,75 @@ namespace ACMESharp.Protocol
         }
 
         /// <summary>
-        /// Retrieves the current status and details of an existing Order.
+        /// Retrieves the current status and details of an existing AcmeOrder.
         /// </summary>
         /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.4
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.1.3
         /// <para>
-        /// You can optionally pass in an existing Order details object if this
+        /// You can optionally pass in an existing AcmeOrder details object if this
         /// is refreshing the state of an existing one, and some values that
         /// don't change, but also are not supplied in subsequent requests, such
-        /// as the Order URL, will be copied over.
+        /// as the AcmeOrder URL, will be copied over.
         /// </para>
         /// </remarks>
-        public async Task<OrderDetails> GetOrderDetailsAsync(string orderUrl, OrderDetails? existing = null)
+        public async Task<AcmeOrderDetails> GetOrderDetailsAsync(string orderUrl)
         {
             var method = _usePostAsGet ? HttpMethod.Post : HttpMethod.Get;
-            var message = _usePostAsGet ? "" : null;
-            var skipNonce = !_usePostAsGet;
             var resp = await SendAcmeAsync(
-                    new Uri(_http.BaseAddress!, orderUrl),
-                    responseType: AcmeJson.Insensitive.Order,
-                    method: method,
-                    message: message,
-                    skipNonce: skipNonce);
-            return DecodeOrderResponse(resp, existing);
+                    orderUrl,
+                    responseType: AcmeJson.Insensitive.AcmeOrder,
+                    method: method);
+            return DecodeOrderResponse(resp, orderUrl);
         }
 
         /// <summary>
-        /// Retrieves the details of an Authorization associated with a previously
-        /// created Order.  The Authorization details URL is returned as part of
-        /// an Order's response.
+        /// Retrieves the details of an AcmeAuthorization associated with a previously
+        /// created AcmeOrder.  The AcmeAuthorization details URL is returned as part of
+        /// an AcmeOrder's response.
         /// </summary>
         /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.5
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.1.4
         /// <para>
-        /// Use this operation to retrieve the initial details of an Authorization,
-        /// such as immediately after creating a new Order, as well as to retrieve
-        /// the subsequent state and progress of an Authorization, such as as after
-        /// responding to an associated Challenge.
+        /// Use this operation to retrieve the initial details of an AcmeAuthorization,
+        /// such as immediately after creating a new AcmeOrder, as well as to retrieve
+        /// the subsequent state and progress of an AcmeAuthorization, such as as after
+        /// responding to an associated AcmeChallenge.
         /// </para>
         /// </remarks>
-        public async Task<Authorization> GetAuthorizationDetailsAsync(string authzDetailsUrl)
+        public async Task<AcmeAuthorization> GetAuthorizationDetailsAsync(string authzDetailsUrl)
         {
             var method = _usePostAsGet ? HttpMethod.Post : HttpMethod.Get;
-            var message = _usePostAsGet ? "" : null;
-            var skipNonce = !_usePostAsGet;
             var typedResp = await SendAcmeAsync(
-                    new Uri(_http.BaseAddress!, authzDetailsUrl),
-                    AcmeJson.Insensitive.Authorization,
-                    method: method,
-                    message: message,
-                    skipNonce: skipNonce);
+                    authzDetailsUrl,
+                    AcmeJson.Insensitive.AcmeAuthorization,
+                    method: method);
+            if (typedResp.Value == null)
+            {
+                throw new Exception("Invalid response");
+            }
             return typedResp.Value;
         }
 
         /// <summary>
-        /// Deactivates a specific Authorization and thereby relinquishes the
-        /// authority to issue Certificates for the associated Identifier.
+        /// Deactivates a specific AcmeAuthorization and thereby relinquishes the
+        /// authority to issue Certificates for the associated AcmeIdentifier.
         /// </summary>
         /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.5.2
         /// </remarks>
-        public async Task<Authorization> DeactivateAuthorizationAsync(string authzDetailsUrl)
+        public async Task<AcmeAuthorization> DeactivateAuthorizationAsync(string authzDetailsUrl)
         {
             var typedResp = await SendAcmeAsync(
-                    new Uri(_http.BaseAddress!, authzDetailsUrl),
-                    responseType: AcmeJson.Insensitive.Authorization,
+                    authzDetailsUrl,
+                    responseType: AcmeJson.Insensitive.AcmeAuthorization,
                     requestType: AcmeJson.Insensitive.DeactivateAuthorizationRequest,
-                    method: HttpMethod.Post,
                     message: new DeactivateAuthorizationRequest());
+            if (typedResp.Value == null)
+            {
+                throw new Exception("Invalid response");
+            }
             return typedResp.Value;
         }
 
@@ -407,18 +417,17 @@ namespace ACMESharp.Protocol
         /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.5.1
         /// </remarks>
-        public async Task<Challenge> GetChallengeDetailsAsync(string challengeDetailsUrl)
+        public async Task<AcmeChallenge> GetChallengeDetailsAsync(string challengeDetailsUrl)
         {
             var method = _usePostAsGet ? HttpMethod.Post : HttpMethod.Get;
-            var message = _usePostAsGet ? "" : null;
-            var skipNonce = !_usePostAsGet;
             var typedResp = await SendAcmeAsync(
-                    new Uri(_http.BaseAddress!, challengeDetailsUrl),
-                    AcmeJson.Insensitive.Challenge,
-                    method: method,
-                    message: message,
-                    skipNonce: skipNonce);
-
+                    challengeDetailsUrl,
+                    AcmeJson.Insensitive.AcmeChallenge,
+                    method: method);
+            if (typedResp.Value == null)
+            {
+                throw new Exception("Invalid response");
+            }
             return typedResp.Value;
         }
 
@@ -427,12 +436,13 @@ namespace ACMESharp.Protocol
         /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.5.1
         /// </remarks>
-        public async Task<Challenge> AnswerChallengeAsync(string challengeDetailsUrl)
+        public async Task<AcmeChallenge> AnswerChallengeAsync(string challengeDetailsUrl)
         {
-            var typedResp = await SendAcmeAsync(
-                    new Uri(_http.BaseAddress!, challengeDetailsUrl),
-                    AcmeJson.Insensitive.Challenge,
-                    method: HttpMethod.Post);
+            var typedResp = await SendAcmeAsync(challengeDetailsUrl, AcmeJson.Insensitive.Object, AcmeJson.Insensitive.AcmeChallenge, message: new());
+            if (typedResp.Value == null)
+            {
+                throw new Exception("Invalid response");
+            }
             return typedResp.Value;
         }
 
@@ -441,21 +451,24 @@ namespace ACMESharp.Protocol
         /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.4
         /// </remarks>
-        public async Task<OrderDetails> FinalizeOrderAsync(string orderFinalizeUrl, byte[] derEncodedCsr)
+        public async Task<AcmeOrderDetails> FinalizeOrderAsync(AcmeOrderDetails details, byte[] derEncodedCsr)
         {
             var message = new FinalizeOrderRequest
             {
                 Csr = Base64Tool.UrlEncode(derEncodedCsr),
             };
+            if (details.Payload.Finalize == null)
+            {
+                throw new InvalidOperationException("Missing finalize url");
+            }
             var resp = await SendAcmeAsync(
-                    new Uri(_http.BaseAddress!, orderFinalizeUrl),
+                    details.Payload.Finalize,
                     requestType: AcmeJson.Insensitive.FinalizeOrderRequest,
-                    responseType: AcmeJson.Insensitive.Order,
+                    responseType: AcmeJson.Insensitive.AcmeOrder,
                     expectedStatuses: new[] { HttpStatusCode.OK, HttpStatusCode.Created },
-                    method: HttpMethod.Post,
                     message: message);
 
-            return DecodeOrderResponse(resp);
+            return DecodeOrderResponse(resp, details.OrderUrl);
         }
 
         /// <summary>
@@ -463,8 +476,12 @@ namespace ACMESharp.Protocol
         /// </summary>
         /// <param name="order"></param>
         /// <returns></returns>
-        public async Task<AcmeCertificate> GetOrderCertificateExAsync(OrderDetails order)
+        public async Task<AcmeCertificate> GetOrderCertificateExAsync(AcmeOrderDetails order)
         {
+            if (order.Payload.Certificate == null)
+            {
+                throw new InvalidOperationException();
+            }
             using var resp = await GetAsync(order.Payload.Certificate);
             var ret = new AcmeCertificate();
             if (resp.Headers.TryGetValues("Link", out var linkValues))
@@ -483,6 +500,10 @@ namespace ACMESharp.Protocol
         /// </remarks>
         public async Task<bool> RevokeCertificateAsync(byte[] derEncodedCertificate, RevokeReason reason = RevokeReason.Unspecified)
         {
+            if (string.IsNullOrEmpty(Directory.RevokeCert))
+            {
+                throw new NotSupportedException();
+            }
             var message = new RevokeCertificateRequest
             {
                 Certificate = Base64Tool.UrlEncode(derEncodedCertificate),
@@ -491,10 +512,9 @@ namespace ACMESharp.Protocol
             // If OK is returned, we're all done. Otherwise general 
             // exception handling will kick in
             _ = await SendAcmeAsync(
-                    new Uri(_http.BaseAddress!, Directory.RevokeCert),
+                    Directory.RevokeCert,
                     requestType: AcmeJson.Insensitive.RevokeCertificateRequest,
                     responseType: AcmeJson.Insensitive.Object,
-                    method: HttpMethod.Post,
                     message: message,
                     expectedStatuses: new[] { HttpStatusCode.OK });
             return true;
@@ -509,11 +529,8 @@ namespace ACMESharp.Protocol
         /// <returns>A tuple containing the content type and the raw content bytes</returns>
         public async Task<HttpResponseMessage> GetAsync(string relativeUrl)
         {
-            var url = new Uri(_http.BaseAddress!, relativeUrl);
             var method = _usePostAsGet ? HttpMethod.Post : HttpMethod.Get;
-            var message = _usePostAsGet ? "" : null;
-            var skipNonce = !_usePostAsGet;
-            var resp = await SendAcmeAsync(url, method, message, skipNonce: skipNonce);
+            var resp = await SendAcmeAsync(relativeUrl, method);
             _ = resp.EnsureSuccessStatusCode();
             return resp;
         }
@@ -522,32 +539,35 @@ namespace ACMESharp.Protocol
         /// The workhorse routine for submitting HTTP requests using ACME protocol
         /// semantics and activating pre- and post-submission event hooks.
         /// </summary>
-        /// <param name="uri">URI to send to</param>
+        /// <param name="relativeUri">URI to send to</param>
         /// <param name="method">HTTP Method to use, defaults to <c>GET</c></param>
         /// <param name="message">Optional request payload, will be JSON-serialized</param>
         /// <param name="expectedStatuses">Any HTTP response statuses that can be interpretted
         ///         as successful, defaults to <c>OK (200)</c>; other response statuses will
         ///         trigger an exception; you can also skip response status checking by supplying
         ///         a zero-length array value here</param>
-        /// <param name="skipNonce">If true, will not expect and extract a Nonce header in the
-        ///         response, defaults to <c>false</c></param>
         /// <param name="opName">Name of operation, will be auto-populated with calling method
         ///         name if unspecified</param>
         /// <returns>The returned HTTP response message, unaltered, after inspecting the
         ///         response details for possible error or problem result</returns>
         async Task<HttpResponseMessage> SendAcmeAsync(
-            Uri uri,
-            HttpMethod? method = null,
+            string relativeUri,
+            HttpMethod? method,
             string? message = null,
             HttpStatusCode[]? expectedStatuses = null,
-            bool skipNonce = false,
             [System.Runtime.CompilerServices.CallerMemberName] string opName = "")
         {
-            if (method == null)
-                method = HttpMethod.Get;
+            method ??= HttpMethod.Post;
             expectedStatuses ??= new[] { HttpStatusCode.OK };
 
+            var uri = new Uri(_http.BaseAddress!, relativeUri);
             var requ = new HttpRequestMessage(method, uri);
+            var skipNonce = method == HttpMethod.Get;
+
+            if (string.IsNullOrEmpty(message) && method == HttpMethod.Post)
+            {
+                message = ComputeAcmeSigned("", uri.ToString());
+            } 
             if (message != null)
             {
                 requ.Content = new StringContent(message);
@@ -583,38 +603,37 @@ namespace ACMESharp.Protocol
         /// <param name="method"></param>
         /// <param name="message"></param>
         /// <param name="expectedStatuses"></param>
-        /// <param name="skipNonce"></param>
-        /// <param name="skipSigning"></param>
         /// <param name="includePublicKey"></param>
         /// <param name="opName"></param>
         /// <returns></returns>
         async Task<Response<TResponse>> SendAcmeAsync<TResponse, TRequest>(
-            Uri uri, JsonTypeInfo<TRequest> requestType, JsonTypeInfo<TResponse> responseType,
+            string uri, JsonTypeInfo<TRequest> requestType, JsonTypeInfo<TResponse> responseType,
             HttpMethod? method = null, TRequest? message = null, HttpStatusCode[]? expectedStatuses = null,
-            bool skipNonce = false, bool skipSigning = false, bool includePublicKey = false,
+            bool includePublicKey = false,
             [System.Runtime.CompilerServices.CallerMemberName] string opName = "")
             where TRequest : class
         {
             string? payload = null;
             if (message != null)
             {
-                payload = skipSigning
-                    ? JsonSerializer.Serialize(message, requestType)
-                    : ComputeAcmeSigned(message, requestType, uri.ToString(), includePublicKey: includePublicKey);
+                payload = JsonSerializer.Serialize(message, requestType);
+                payload = ComputeAcmeSigned(payload, uri, includePublicKey: includePublicKey);
             }
-
-            var response = await SendAcmeAsync(uri, method, payload, expectedStatuses, skipNonce, opName);
-            return new Response<TResponse>()
+            var response = await SendAcmeAsync(uri, method, payload, expectedStatuses, opName);
+            return new Response<TResponse>(response)
             {
-                Message = response,
                 Value = await Deserialize(response, responseType)
             };
         }
 
-        public record struct Response<TResponse>
+        public class Response<TResponse>
         {
-            public HttpResponseMessage Message { get; set; }
+            public HttpResponseMessage Message { get; init; }
             public TResponse? Value { get; set; }
+            public Response(HttpResponseMessage message)
+            {
+                Message = message;
+            }
         }
 
         /// <summary>
@@ -626,20 +645,16 @@ namespace ACMESharp.Protocol
         /// <param name="message"></param>
         /// <param name="method"></param>
         /// <param name="expectedStatuses"></param>
-        /// <param name="skipNonce"></param>
         /// <param name="opName"></param>
         /// <returns></returns>
         async Task<Response<TResponse>> SendAcmeAsync<TResponse>(
-            Uri uri, JsonTypeInfo<TResponse> responseType,
-            string? message = null,
-            HttpMethod? method = null, HttpStatusCode[]? expectedStatuses = null,
-            bool skipNonce = false,
+            string uri, JsonTypeInfo<TResponse> responseType,
+            string? message = null, HttpMethod? method = null, HttpStatusCode[]? expectedStatuses = null,
             [System.Runtime.CompilerServices.CallerMemberName] string opName = "")
         {
-            var response = await SendAcmeAsync(uri, method, message, expectedStatuses, skipNonce, opName);
-            return new Response<TResponse>()
+            var response = await SendAcmeAsync(uri, method, message, expectedStatuses, opName);
+            return new Response<TResponse>(response)
             {
-                Message = response,
                 Value = await Deserialize(response, responseType)
             };
         }
@@ -683,17 +698,14 @@ namespace ACMESharp.Protocol
         /// <returns></returns>
         protected static AccountDetails DecodeAccountResponse(Response<Account> resp, AccountDetails? existing = null)
         {
-            if (!resp.Message.Headers.TryGetValues("Link", out var linkValues))
-            {
-                throw new InvalidDataException();
-            }
-            var acctUrl = resp.Message.Headers.Location?.ToString();
+            _ = resp.Message.Headers.TryGetValues("Link", out var linkValues);
             var links = new HTTP.LinkCollection(linkValues); // This allows/handles null
             var tosLink = links.GetFirstOrDefault(Constants.TosLinkHeaderRelationKey)?.Uri;
             if (resp.Value == default)
             {
                 throw new InvalidDataException();
             }
+            var acctUrl = resp.Message.Headers.Location?.ToString();
             var acct = new AccountDetails
             {
                 Payload = resp.Value,
@@ -703,13 +715,16 @@ namespace ACMESharp.Protocol
             return acct;
         }
 
-        protected static OrderDetails DecodeOrderResponse(Response<Order> resp, OrderDetails? existing = null)
+        protected static AcmeOrderDetails DecodeOrderResponse(Response<AcmeOrder> resp, string? originalUrl = null)
         {
             var orderUrl = resp.Message.Headers.Location?.ToString();
-            var order = new OrderDetails
+            if (resp.Value == null)
             {
-                Payload = resp.Value,
-                OrderUrl = orderUrl ?? existing?.OrderUrl ?? throw new InvalidOperationException("missing orderUrl"),
+                throw new InvalidOperationException("missing order");
+            }
+            var order = new AcmeOrderDetails(resp.Value)
+            {
+                OrderUrl = orderUrl ?? originalUrl
             };
             return order;
         }
@@ -734,7 +749,9 @@ namespace ACMESharp.Protocol
         /// Computes the JWS-signed ACME request body for the given message object
         /// and the current or input <see cref="Signer"/>.
         /// </summary>
-        protected string ComputeAcmeSigned<T>(T message, JsonTypeInfo<T> typeInfo, string requUrl,
+        protected string ComputeAcmeSigned(
+            string message, 
+            string requUrl,
             IJwsTool? signer = null,
             bool includePublicKey = false,
             bool excludeNonce = false)
@@ -751,8 +768,7 @@ namespace ACMESharp.Protocol
                 var protectedHeader = CreateProtectedHeader(es, requUrl, includePublicKey, excludeNonce);
                 protectedHeaderSer = JsonSerializer.Serialize(protectedHeader, AcmeJson.Insensitive.ProtectedHeaderESJwk);
             }
-            var payload = JsonSerializer.Serialize(message, typeInfo);
-            var jwsFlatJS = SignFlatJsonAsObject(signer.Sign, payload, protectedHeaderSer);
+            var jwsFlatJS = SignFlatJsonAsObject(signer.Sign, message, protectedHeaderSer);
             return JsonSerializer.Serialize(jwsFlatJS, AcmeJson.Insensitive.JwsSignedPayload);
         }
 

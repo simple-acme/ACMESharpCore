@@ -13,7 +13,7 @@ namespace ACMESharp.Authorizations
         /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-8
         /// </remarks>
-        public static IChallengeValidationDetails DecodeChallengeValidation(Authorization authz, string challengeType, IJwsTool signer)
+        public static IChallengeValidationDetails DecodeChallengeValidation(AcmeAuthorization authz, string challengeType, IJwsTool signer)
         {
             var challenge = authz.Challenges.Where(x => x.Type == challengeType).FirstOrDefault();
             if (challenge == default)
@@ -34,7 +34,7 @@ namespace ACMESharp.Authorizations
         /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-8.4
         /// </remarks>
-        public static Dns01ChallengeValidationDetails ResolveChallengeForDns01(Authorization authz, Challenge challenge, IJwsTool signer)
+        public static Dns01ChallengeValidationDetails ResolveChallengeForDns01(AcmeAuthorization authz, AcmeChallenge challenge, IJwsTool signer)
         {
             var keyAuthzDigested = JwsHelper.ComputeKeyAuthorizationDigest(signer, challenge.Token);
             return new Dns01ChallengeValidationDetails
@@ -51,7 +51,7 @@ namespace ACMESharp.Authorizations
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-8.3
         /// </remarks>
         public static Http01ChallengeValidationDetails ResolveChallengeForHttp01(
-                Authorization authz, Challenge challenge, IJwsTool signer)
+                AcmeAuthorization authz, AcmeChallenge challenge, IJwsTool signer)
         {
             var keyAuthz = JwsHelper.ComputeKeyAuthorization(
                     signer, challenge.Token);
@@ -74,7 +74,7 @@ namespace ACMESharp.Authorizations
         /// https://tools.ietf.org/html/draft-ietf-acme-tls-alpn-05
         /// </remarks>
         public static TlsAlpn01ChallengeValidationDetails ResolveChallengeForTlsAlpn01(
-                Authorization authz, Challenge challenge, IJwsTool signer)
+                AcmeAuthorization authz, AcmeChallenge challenge, IJwsTool signer)
         {
             var keyAuthz = JwsHelper.ComputeKeyAuthorization(signer, challenge.Token);
             return new TlsAlpn01ChallengeValidationDetails

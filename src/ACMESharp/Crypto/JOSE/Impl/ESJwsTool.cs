@@ -64,6 +64,7 @@ namespace ACMESharp.Crypto.JOSE.Impl
         {
             _dsa?.Dispose();
             _dsa = null;
+            GC.SuppressFinalize(this);
         }
 
         public string Export()
@@ -91,6 +92,10 @@ namespace ACMESharp.Crypto.JOSE.Impl
                 throw new InvalidOperationException();
             }
             var details = JsonSerializer.Deserialize(exported, AcmeJson.Insensitive.ESPrivateExport);
+            if (details == null)
+            {
+                throw new InvalidOperationException();
+            }
             HashSize = details.HashSize;
             Init();
 
@@ -121,7 +126,7 @@ namespace ACMESharp.Crypto.JOSE.Impl
                     Y = Base64Tool.UrlEncode(keyParams.Q!.Y!),
                 };
             }
-            return _jwk.Value;
+            return _jwk;
         }
 
         public string ExportEab()
@@ -150,36 +155,36 @@ namespace ACMESharp.Crypto.JOSE.Impl
         /// <summary>
         /// Format for an internal representation of string-based export/import.
         /// </summary>
-        public struct ESPrivateExport
+        public class ESPrivateExport
         {
             public int HashSize { get; set; }
 
-            public string D { get; set; }
+            public string D { get; set; } = "";
 
-            public string X { get; set; }
+            public string X { get; set; } = "";
 
-            public string Y { get; set; }
+            public string Y { get; set; } = "";
         }
 
         // As per RFC 7638 Section 3, these are the *required* elements of the
         // JWK and are sorted in lexicographic order to produce a canonical form
-        public struct ESJwk
+        public record class ESJwk
         {
             [JsonPropertyOrder(1)]
             [JsonPropertyName("crv")]
-            public string Crv { get; set; }
+            public string Crv { get; set; } = "";
 
             [JsonPropertyOrder(2)]
             [JsonPropertyName("kty")]
-            public string Kty { get; set; }
+            public string Kty { get; set; } = "";
 
             [JsonPropertyOrder(3)]
             [JsonPropertyName("x")]
-            public string X { get; set; }
+            public string X { get; set; } = "";
 
             [JsonPropertyOrder(4)]
             [JsonPropertyName("y")]
-            public string Y { get; set; }
+            public string Y { get; set; } = "";
         }
     }
 }

@@ -56,11 +56,8 @@ namespace ACMESharp.Crypto.JOSE
         public static JwsSignedPayload SignFlatJsonAsObject(
             Func<byte[], byte[]> sigFunc,
             string payload,
-            string? protectedHeaders)
+            string protectedHeaders)
         {
-            if (protectedHeaders == null)
-                throw new ArgumentException("at least one of protected or unprotected headers must be specified");
-
             var payloadB64u = Base64Tool.UrlEncode(Encoding.UTF8.GetBytes(payload));
             var protectedB64u = Base64Tool.UrlEncode(Encoding.UTF8.GetBytes(protectedHeaders ?? ""));
 
@@ -97,7 +94,7 @@ namespace ACMESharp.Crypto.JOSE
         }
 
         /// <summary>
-        /// Computes the ACME Key Authorization of the JSON Web Key (JWK) of an argument
+        /// Computes the ACME Key AcmeAuthorization of the JSON Web Key (JWK) of an argument
         /// Signer as prescribed in the
         /// <see href="https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.1"
         /// >ACME specification, section 7.1</see>.
@@ -111,7 +108,7 @@ namespace ACMESharp.Crypto.JOSE
 
         /// <summary>
         /// Computes a SHA256 digest over the <see cref="ComputeKeyAuthorization"
-        /// >ACME Key Authorization</see> as required by some of the ACME Challenge
+        /// >ACME Key AcmeAuthorization</see> as required by some of the ACME AcmeChallenge
         /// responses.
         /// </summary>
         public static string ComputeKeyAuthorizationDigest(IJwsTool signer, string token)
