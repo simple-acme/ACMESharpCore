@@ -99,7 +99,7 @@ namespace ACMESharp.Crypto.JOSE
         /// <see href="https://tools.ietf.org/html/draft-ietf-acme-acme-01#section-7.1"
         /// >ACME specification, section 7.1</see>.
         /// </summary>
-        public static string ComputeKeyAuthorization(IJwsTool signer, string token)
+        public static string ComputeKeyAuthorization(IJwsTool signer, string? token)
         {
             using var sha = SHA256.Create();
             var jwkThumb = Base64Tool.UrlEncode(ComputeThumbprint(signer, sha));
@@ -111,7 +111,7 @@ namespace ACMESharp.Crypto.JOSE
         /// >ACME Key AcmeAuthorization</see> as required by some of the ACME AcmeChallenge
         /// responses.
         /// </summary>
-        public static string ComputeKeyAuthorizationDigest(IJwsTool signer, string token)
+        public static string ComputeKeyAuthorizationDigest(IJwsTool signer, string? token)
         {
             using var sha = SHA256.Create();
             var jwkThumb = Base64Tool.UrlEncode(ComputeThumbprint(signer, sha));
