@@ -509,13 +509,12 @@ namespace ACMESharp.Protocol
                 Certificate = Base64Tool.UrlEncode(derEncodedCertificate),
                 Reason = reason
             };
-            // If OK is returned, we're all done. Otherwise general 
-            // exception handling will kick in
+            var serialized = JsonSerializer.Serialize(message, AcmeJson.Insensitive.RevokeCertificateRequest);
+            serialized = ComputeAcmeSigned(serialized, Directory.RevokeCert);
+            // If OK is returned, we're all done. Otherwise general exception handling will kick in
             _ = await SendAcmeAsync(
                     Directory.RevokeCert,
-                    requestType: AcmeJson.Insensitive.RevokeCertificateRequest,
-                    responseType: AcmeJson.Insensitive.Object,
-                    message: message,
+                    message: serialized,
                     expectedStatuses: new[] { HttpStatusCode.OK });
             return true;
         }
@@ -552,7 +551,7 @@ namespace ACMESharp.Protocol
         ///         response details for possible error or problem result</returns>
         async Task<HttpResponseMessage> SendAcmeAsync(
             string relativeUri,
-            HttpMethod? method,
+            HttpMethod? method = null,
             string? message = null,
             HttpStatusCode[]? expectedStatuses = null,
             [System.Runtime.CompilerServices.CallerMemberName] string opName = "")

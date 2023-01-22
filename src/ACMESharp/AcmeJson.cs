@@ -36,7 +36,11 @@ namespace ACMESharp
         {
             get
             {
-                return new AcmeJson(new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                return new AcmeJson(
+                    new JsonSerializerOptions() { 
+                        PropertyNameCaseInsensitive = true, 
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault 
+                    });
             }
         }
     }
