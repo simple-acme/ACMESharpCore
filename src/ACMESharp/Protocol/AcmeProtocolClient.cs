@@ -69,7 +69,7 @@ namespace ACMESharp.Protocol
 
         public AccountDetails? Account { get; set; }
 
-        public string? NextNonce { get; private set; }
+        public string? NextNonce { get; set; }
 
         /// <summary>
         /// Retrieves the Directory object from the target ACME CA.  The Directory is used
