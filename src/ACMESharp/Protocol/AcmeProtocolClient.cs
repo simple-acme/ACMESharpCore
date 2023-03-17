@@ -63,7 +63,7 @@ namespace ACMESharp.Protocol
         /// with a new set of keys will be constructed of type ES256
         /// (Elliptic Curve using the P-256 curve and a SHA256 hash).
         /// </remarks>
-        public IJwsTool Signer { get; private set; }
+        public IJwsTool Signer { get; set; }
 
         public ServiceDirectory Directory { get; set; }
 
