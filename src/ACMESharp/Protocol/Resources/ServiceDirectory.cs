@@ -14,6 +14,7 @@ namespace ACMESharp.Protocol.Resources
         public string? NewAuthz { get; set; } //! = "acme/new-authz";
         public string? RevokeCert { get; set; } //! = "acme/revoke-cert";
         public string? KeyChange { get; set; } //! = "acme/key-change";
+        public string? RenewalInfo { get; set; } //! = "acme/renewal-info";
         public DirectoryMeta? Meta { get; set; }
     }
 

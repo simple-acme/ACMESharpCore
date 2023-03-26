@@ -434,6 +434,28 @@ namespace ACMESharp.Protocol
         /// <summary>
         /// </summary>
         /// <remarks>
+        /// https://datatracker.ietf.org/doc/draft-ietf-acme-ari/
+        /// </remarks>
+        public async Task<AcmeRenewalInfo?> GetRenewalInfo(byte[] certificate)
+        {
+            if (string.IsNullOrWhiteSpace(Directory.RenewalInfo))
+            {
+                return null;
+            }
+            var typedResp = await SendAcmeAsync(
+                Directory.RenewalInfo + Base64Tool.UrlEncode(certificate),
+                AcmeJson.Insensitive.AcmeRenewalInfo,
+                method: HttpMethod.Get);
+            if (typedResp.Value == null)
+            {
+                throw new Exception("Invalid response");
+            }
+            return typedResp.Value;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.5.1
         /// </remarks>
         public async Task<AcmeChallenge> AnswerChallengeAsync(string challengeDetailsUrl)
