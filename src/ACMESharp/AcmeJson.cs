@@ -26,6 +26,7 @@ namespace ACMESharp
     [JsonSerializable(typeof(CheckAccountRequest))]
     [JsonSerializable(typeof(AcmeRenewalInfo))]
     [JsonSerializable(typeof(UpdateAccountRequest))]
+    [JsonSerializable(typeof(UpdateRenewalInfoRequest))]
     [JsonSerializable(typeof(DeactivateAuthorizationRequest))]
     [JsonSerializable(typeof(CreateOrderRequest))]
     [JsonSerializable(typeof(FinalizeOrderRequest))]

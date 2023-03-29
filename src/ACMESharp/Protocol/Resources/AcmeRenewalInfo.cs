@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.Metrics;
 using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Resources

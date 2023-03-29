@@ -436,14 +436,14 @@ namespace ACMESharp.Protocol
         /// <remarks>
         /// https://datatracker.ietf.org/doc/draft-ietf-acme-ari/
         /// </remarks>
-        public async Task<AcmeRenewalInfo?> GetRenewalInfo(byte[] certificate)
+        public async Task<AcmeRenewalInfo?> GetRenewalInfo(byte[] certificateId)
         {
             if (string.IsNullOrWhiteSpace(Directory.RenewalInfo))
             {
                 return null;
             }
             var typedResp = await SendAcmeAsync(
-                Directory.RenewalInfo + Base64Tool.UrlEncode(certificate),
+                Directory.RenewalInfo + Base64Tool.UrlEncode(certificateId),
                 AcmeJson.Insensitive.AcmeRenewalInfo,
                 method: HttpMethod.Get);
             if (typedResp.Value == null)
@@ -451,6 +451,30 @@ namespace ACMESharp.Protocol
                 throw new Exception("Invalid response");
             }
             return typedResp.Value;
+        }
+
+        /// <summary>
+        /// Tell the server that we don't care about a certificate anymore,
+        /// e.g. don't send us emails that 
+        /// </summary>
+        /// <param name="certificateId"></param>
+        /// <returns></returns>
+        public async Task<object> UpdateRenewalInfo(byte[] certificateId)
+        {
+            if (string.IsNullOrWhiteSpace(Directory.RenewalInfo))
+            {
+                return new object();
+            }
+            var request = new UpdateRenewalInfoRequest()
+            {
+                CertificateId = Base64Tool.UrlEncode(certificateId),
+                Replaced = true
+            };
+            return await SendAcmeAsync(
+                Directory.RenewalInfo,
+                AcmeJson.Insensitive.UpdateRenewalInfoRequest,
+                AcmeJson.Insensitive.Object,
+                message: request);
         }
 
         /// <summary>
