@@ -459,22 +459,22 @@ namespace ACMESharp.Protocol
         /// </summary>
         /// <param name="certificateId"></param>
         /// <returns></returns>
-        public async Task<object> UpdateRenewalInfo(byte[] certificateId)
+        public async Task UpdateRenewalInfo(byte[] certificateId)
         {
             if (string.IsNullOrWhiteSpace(Directory.RenewalInfo))
             {
-                return new object();
+                return;
             }
             var request = new UpdateRenewalInfoRequest()
             {
                 CertificateId = Base64Tool.UrlEncode(certificateId),
                 Replaced = true
             };
-            return await SendAcmeAsync(
+            var serialized = JsonSerializer.Serialize(request, AcmeJson.Insensitive.UpdateRenewalInfoRequest);
+            serialized = ComputeAcmeSigned(serialized, Directory.RenewalInfo);
+            _ = await SendAcmeAsync(
                 Directory.RenewalInfo,
-                AcmeJson.Insensitive.UpdateRenewalInfoRequest,
-                AcmeJson.Insensitive.Object,
-                message: request);
+                message: serialized);
         }
 
         /// <summary>
