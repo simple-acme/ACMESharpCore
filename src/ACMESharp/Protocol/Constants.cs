@@ -4,27 +4,13 @@ namespace ACMESharp.Protocol
 {
     public static class Constants
     {
-        static Constants()
-        {
-            var asmVer = typeof(Constants).Assembly.GetName().Version;
-            UserAgentHeaderValue = $"ACMESharp/{asmVer} (ACME 2.0)";
-        }
-
         /// <summary>
         /// Date Time format used by ACME <c>notBefore</c> and <c>notAfter</c>
         /// fields, as defined by
         /// <see ref="https://tools.ietf.org/html/rfc3339">RFC3339</see> and
         /// <see ref="https://tools.ietf.org/html/rfc3339#ref-ISO8601">ISO 8601</see>.
         /// </summary>
-        public const string Rfc3339DateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss.fffK";
-
-        /// <summary>
-        /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-6.1
-        /// </summary>
-        /// <remarks>
-        /// Computed dynamically at assembly load to incorporate the full.
-        /// </remarks>
-        public static readonly string UserAgentHeaderValue;
+        public const string Rfc3339DateTimeFormat = "yyyy-MM-dd'T'HH:mm:ssK"; 
 
         /// <summary>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-6.1
