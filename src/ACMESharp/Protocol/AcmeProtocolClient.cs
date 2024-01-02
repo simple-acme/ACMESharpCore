@@ -443,7 +443,7 @@ namespace ACMESharp.Protocol
                 return null;
             }
             var typedResp = await SendAcmeAsync(
-                Directory.RenewalInfo + Base64Tool.UrlEncode(certificateId),
+                Directory.RenewalInfo.TrimEnd('/') + '/' + Base64Tool.UrlEncode(certificateId),
                 AcmeJson.Insensitive.AcmeRenewalInfo,
                 method: HttpMethod.Get);
             if (typedResp.Value == null)
