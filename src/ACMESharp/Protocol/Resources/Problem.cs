@@ -7,7 +7,6 @@ namespace ACMESharp.Protocol.Resources
         public const string StandardProblemTypeNamespace = "urn:ietf:params:acme:error:";
 
         [JsonPropertyName("type")]
-        [JsonRequired()]
         public string? Type { get; set; }
 
         [JsonPropertyName("detail")]
