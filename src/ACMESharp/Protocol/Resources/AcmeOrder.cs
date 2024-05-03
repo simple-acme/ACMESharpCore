@@ -27,7 +27,6 @@ namespace ACMESharp.Protocol.Resources
         public string[]? Authorizations { get; set; }
 
         [JsonPropertyName("finalize")]
-        [JsonRequired]
         public string? Finalize { get; set; }
 
         [JsonPropertyName("certificate")]
