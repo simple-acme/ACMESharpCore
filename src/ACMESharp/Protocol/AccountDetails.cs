@@ -11,12 +11,12 @@ namespace ACMESharp.Protocol
     /// to several ACME operations regarding an ACME Account, such as Account
     /// registration, update, key rotation and deactivation.
     /// </remarks>
-    public class AccountDetails
+    public record struct AccountDetails
     {
         public Account Payload { get; set; }
 
         public string Kid { get; set; }
 
-        public string TosLink { get; set; }
+        public string? TosLink { get; set; }
     }
 }

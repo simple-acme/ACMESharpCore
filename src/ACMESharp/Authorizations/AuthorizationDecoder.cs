@@ -13,29 +13,20 @@ namespace ACMESharp.Authorizations
         /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-8
         /// </remarks>
-        public static IChallengeValidationDetails DecodeChallengeValidation(
-                Authorization authz, string challengeType, IJwsTool signer)
+        public static IChallengeValidationDetails DecodeChallengeValidation(AcmeAuthorization authz, string challengeType, IJwsTool signer)
         {
-            var challenge = authz.Challenges.Where(x => x.Type == challengeType)
-                    .FirstOrDefault();
-            if (challenge == null)
+            var challenge = authz.Challenges?.Where(x => x.Type == challengeType).FirstOrDefault();
+            if (challenge == default)
             {
-                throw new InvalidOperationException(
-                        $"Challenge type [{challengeType}] not found for given Authorization");
+                throw new InvalidOperationException($"Challenge type [{challengeType}] not found for given Authorization");
             }
-
-            switch (challengeType)
+            return challengeType switch
             {
-                case Dns01ChallengeValidationDetails.Dns01ChallengeType:
-                    return ResolveChallengeForDns01(authz, challenge, signer);
-                case Http01ChallengeValidationDetails.Http01ChallengeType:
-                    return ResolveChallengeForHttp01(authz, challenge, signer);
-                case TlsAlpn01ChallengeValidationDetails.TlsAlpn01ChallengeType:
-                    return ResolveChallengeForTlsAlpn01(authz, challenge, signer);
-            }
-
-            throw new NotImplementedException(
-                    $"Unknown or unsupported Challenge type [{challengeType}]");
+                Dns01ChallengeValidationDetails.Dns01ChallengeType => ResolveChallengeForDns01(authz, challenge, signer),
+                Http01ChallengeValidationDetails.Http01ChallengeType => ResolveChallengeForHttp01(authz, challenge, signer),
+                TlsAlpn01ChallengeValidationDetails.TlsAlpn01ChallengeType => ResolveChallengeForTlsAlpn01(challenge, signer),
+                _ => throw new NotImplementedException($"Unknown or unsupported Challenge type [{challengeType}]"),
+            };
         }
 
         /// <summary>
@@ -43,16 +34,12 @@ namespace ACMESharp.Authorizations
         /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-8.4
         /// </remarks>
-        public static Dns01ChallengeValidationDetails ResolveChallengeForDns01(
-                Authorization authz, Challenge challenge, IJwsTool signer)
+        public static Dns01ChallengeValidationDetails ResolveChallengeForDns01(AcmeAuthorization authz, AcmeChallenge challenge, IJwsTool signer)
         {
-            var keyAuthzDigested = JwsHelper.ComputeKeyAuthorizationDigest(
-                    signer, challenge.Token);
-
+            var keyAuthzDigested = JwsHelper.ComputeKeyAuthorizationDigest(signer, challenge?.Token);
             return new Dns01ChallengeValidationDetails
             {
-                DnsRecordName = $@"{Dns01ChallengeValidationDetails.DnsRecordNamePrefix}.{
-                        authz.Identifier.Value}",
+                DnsRecordName = $"{Dns01ChallengeValidationDetails.DnsRecordNamePrefix}.{authz.Identifier?.Value}",
                 DnsRecordType = Dns01ChallengeValidationDetails.DnsRecordTypeDefault,
                 DnsRecordValue = keyAuthzDigested,
             };
@@ -64,18 +51,14 @@ namespace ACMESharp.Authorizations
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-8.3
         /// </remarks>
         public static Http01ChallengeValidationDetails ResolveChallengeForHttp01(
-                Authorization authz, Challenge challenge, IJwsTool signer)
+                AcmeAuthorization authz, AcmeChallenge challenge, IJwsTool signer)
         {
-            var keyAuthz = JwsHelper.ComputeKeyAuthorization(
-                    signer, challenge.Token);
+            var keyAuthz = JwsHelper.ComputeKeyAuthorization(signer, challenge.Token);
 
             return new Http01ChallengeValidationDetails
             {
-                HttpResourceUrl = $@"http://{authz.Identifier.Value}/{
-                        Http01ChallengeValidationDetails.HttpPathPrefix}/{
-                        challenge.Token}",
-                HttpResourcePath = $@"{Http01ChallengeValidationDetails.HttpPathPrefix}/{
-                        challenge.Token}",
+                HttpResourceUrl = $@"http://{authz.Identifier?.Value}/{Http01ChallengeValidationDetails.HttpPathPrefix}/{challenge.Token}",
+                HttpResourcePath = $@"{Http01ChallengeValidationDetails.HttpPathPrefix}/{challenge.Token}",
                 HttpResourceContentType = Http01ChallengeValidationDetails.HttpResourceContentTypeDefault,
                 HttpResourceValue = keyAuthz,
             };
@@ -86,8 +69,7 @@ namespace ACMESharp.Authorizations
         /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-tls-alpn-05
         /// </remarks>
-        public static TlsAlpn01ChallengeValidationDetails ResolveChallengeForTlsAlpn01(
-                Authorization authz, Challenge challenge, IJwsTool signer)
+        public static TlsAlpn01ChallengeValidationDetails ResolveChallengeForTlsAlpn01(AcmeChallenge challenge, IJwsTool signer)
         {
             var keyAuthz = JwsHelper.ComputeKeyAuthorization(signer, challenge.Token);
             return new TlsAlpn01ChallengeValidationDetails

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -33,7 +33,7 @@ namespace ACMESharp.HTTP
         }
 
         /// <param name="linkValues">It's OK to provide a null value.</param>
-        public LinkCollection(IEnumerable<string> linkValues)
+        public LinkCollection(IEnumerable<string>? linkValues)
         {
             if (linkValues != null)
             {
@@ -65,7 +65,7 @@ namespace ACMESharp.HTTP
             _Links.Add(link);
         }
 
-        public Link GetFirstOrDefault(string key)
+        public Link? GetFirstOrDefault(string key)
         {
             return _Links.FirstOrDefault(x => x.Relation == key);
         }

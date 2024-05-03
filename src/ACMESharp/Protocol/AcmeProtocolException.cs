@@ -1,37 +1,20 @@
 using System;
-using System.Runtime.Serialization;
+using System.Net.Http;
 using ACMESharp.Protocol.Resources;
 
 namespace ACMESharp.Protocol
 {
     public class AcmeProtocolException : Exception
     {
-        private Problem _problem;
+        private Problem? _problem;
 
-        public AcmeProtocolException(Problem problem = null)
+        public AcmeProtocolException(HttpResponseMessage response, string message, Problem? problem = null) : base(message)
         {
+            Response = response;
             Init(problem);
         }
 
-        public AcmeProtocolException(string message, Problem problem = null)
-            : base(message)
-        {
-            Init(problem);
-        }
-
-        public AcmeProtocolException(string message, Exception innerException, Problem problem = null)
-            : base(message, innerException)
-        {
-            Init(problem);
-        }
-
-        protected AcmeProtocolException(SerializationInfo info, StreamingContext context, Problem problem = null)
-            : base(info, context)
-        {
-            Init(problem);
-        }
-
-        private void Init(Problem problem = null)
+        private void Init(Problem? problem = null)
         {
             _problem = problem;
             var problemType = _problem?.Type;
@@ -51,11 +34,10 @@ namespace ACMESharp.Protocol
         }
 
         public ProblemType ProblemType { get; private set; } = ProblemType.Unknown;
-
-        public string ProblemTypeRaw => _problem?.Type;
-
-        public string ProblemDetail => _problem?.Detail;
-
+        public HttpResponseMessage Response { get; private set; }
+        public string? ProblemTypeRaw => _problem?.Type;
+        public string? ProblemDetail => _problem?.Detail;
+        public string? ProblemInstance => _problem?.Instance;
         public int ProblemStatus => _problem?.Status ?? -1;
     }
 }

@@ -1,5 +1,4 @@
-using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Resources
 {
@@ -7,14 +6,16 @@ namespace ACMESharp.Protocol.Resources
     {
         public const string StandardProblemTypeNamespace = "urn:ietf:params:acme:error:";
 
-        [JsonProperty("type", Required = Required.Always)]
-        [Required]
-        public string Type { get; set; }
+        [JsonPropertyName("type")]
+        public string? Type { get; set; }
 
-        [JsonProperty("detail")]
-        public string Detail { get; set; }
+        [JsonPropertyName("detail")]
+        public string? Detail { get; set; }
 
-        [JsonProperty("status")]
+        [JsonPropertyName("status")]
         public int? Status { get; set; }
+
+        [JsonPropertyName("instance")]
+        public string? Instance { get; set; }
     }
 }

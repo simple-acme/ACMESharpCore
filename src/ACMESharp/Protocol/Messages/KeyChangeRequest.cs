@@ -1,5 +1,4 @@
-using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Messages
 {
@@ -7,14 +6,14 @@ namespace ACMESharp.Protocol.Messages
     /// Based on:
     ///   https://tools.ietf.org/html/draft-ietf-acme-acme-18#section-7.3.5
     /// </summary>
-    public class KeyChangeRequest
+    public class KeyChangeRequest<TKey>
     {
-        [JsonProperty("account", Required = Required.Always)]
-        [Required]
-        public string Account { get; set; }
+        [JsonPropertyName("account")]
+        [JsonRequired]
+        public string? Account { get; set; }
 
-        [JsonProperty("oldKey", Required = Required.Always)]
-        [Required]
-        public object OldKey { get; set; }
+        [JsonPropertyName("oldKey")]
+        [JsonRequired]
+        public TKey? OldKey { get; set; }
     }
 }
