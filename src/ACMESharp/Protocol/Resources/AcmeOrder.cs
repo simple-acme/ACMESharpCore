@@ -29,6 +29,9 @@ namespace ACMESharp.Protocol.Resources
         [JsonPropertyName("finalize")]
         public string? Finalize { get; set; }
 
+        [JsonPropertyName("replaces")]
+        public string? Replaces { get; set; }
+
         [JsonPropertyName("certificate")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public string? Certificate { get; set; }

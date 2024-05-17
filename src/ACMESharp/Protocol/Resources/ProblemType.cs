@@ -17,6 +17,7 @@ namespace ACMESharp.Protocol.Resources
         BadRevocationReason,
         BadSignatureAlgorithm,
         Caa,
+        Conflict,
         Compound,
         Connection,
         Dns,

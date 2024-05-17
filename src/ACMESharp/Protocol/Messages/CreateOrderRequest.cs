@@ -12,6 +12,9 @@ namespace ACMESharp.Protocol.Messages
         [JsonRequired]
         public AcmeIdentifier[]? Identifiers { get; set; }
 
+        [JsonPropertyName("replaces")]
+        public string? Replaces { get; set; }
+
         [JsonPropertyName("notBefore")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? NotBefore { get; set; }
