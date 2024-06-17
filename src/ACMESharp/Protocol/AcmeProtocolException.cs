@@ -23,7 +23,7 @@ namespace ACMESharp.Protocol
                 if (problemType.StartsWith(Problem.StandardProblemTypeNamespace))
                 {
                     if (Enum.TryParse(
-                        problemType.Substring(Problem.StandardProblemTypeNamespace.Length), 
+                        problemType[Problem.StandardProblemTypeNamespace.Length..], 
                         true,
                         out ProblemType pt))
                     {

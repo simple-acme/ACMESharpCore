@@ -9,7 +9,7 @@ namespace ACMESharp.Authorizations
         public const string AlpnExtensionName = "acme-tls/1";
         public const string AcmeIdentifierExtension = "acmeIdentifier";
 
-        public string ChallengeType => TlsAlpn01ChallengeType;
+        public readonly string ChallengeType => TlsAlpn01ChallengeType;
 
         public string TokenValue { get; set; }
     }

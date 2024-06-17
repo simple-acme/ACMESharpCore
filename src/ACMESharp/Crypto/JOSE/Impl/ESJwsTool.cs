@@ -91,11 +91,7 @@ namespace ACMESharp.Crypto.JOSE.Impl
             {
                 throw new InvalidOperationException();
             }
-            var details = JsonSerializer.Deserialize(exported, AcmeJson.Insensitive.ESPrivateExport);
-            if (details == null)
-            {
-                throw new InvalidOperationException();
-            }
+            var details = JsonSerializer.Deserialize(exported, AcmeJson.Insensitive.ESPrivateExport) ?? throw new InvalidOperationException();
             HashSize = details.HashSize;
             Init();
 

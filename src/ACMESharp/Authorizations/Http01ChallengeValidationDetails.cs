@@ -11,7 +11,7 @@ namespace ACMESharp.Authorizations
         public const string HttpPathPrefix = ".well-known/acme-challenge";
         public const string HttpResourceContentTypeDefault = "application/octet-stream";
 
-        public string ChallengeType => Http01ChallengeType;
+        public readonly string ChallengeType => Http01ChallengeType;
 
         public string HttpResourceUrl { get; set; }
 

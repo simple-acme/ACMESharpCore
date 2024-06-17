@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Messages
@@ -9,6 +10,7 @@ namespace ACMESharp.Protocol.Messages
     {
         [JsonPropertyName("onlyReturnExisting")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "JSON serialization")]
         public bool OnlyReturnExisting  { get => true; }
     }
 }

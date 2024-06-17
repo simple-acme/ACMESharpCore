@@ -14,12 +14,12 @@ namespace ACMESharp.HTTP
     /// This class only implements a subset of the mechanics and nuances of the Link header
     /// field as necessary for implementing the ACME protocol.
     /// </remarks>
-    public class Link
+    public partial class Link
     {
         /// <summary>
         /// Regex pattern to match and extract the components of an HTTP related link header.
         /// </summary>
-        public static readonly Regex LinkHeaderRegex = new Regex("<(.+)>;[ ]?rel=\"(.+)\"");
+        public static readonly Regex LinkHeaderRegex = LinkRegex();
 
         public const string LinkHeaderFormat = "<{0}>;rel={1}";
 
@@ -38,7 +38,7 @@ namespace ACMESharp.HTTP
         public Link(string uri, string rel)
         {
             // This will parse the URI to make sure it's well-formed and throw if not
-            new Uri(uri);
+            _ = new Uri(uri);
 
             Uri = uri;
             Relation = rel;
@@ -50,5 +50,8 @@ namespace ACMESharp.HTTP
         public string Uri { get; private set; }
 
         public string Relation { get; private set; }
+
+        [GeneratedRegex("<(.+)>;[ ]?rel=\"(.+)\"")]
+        private static partial Regex LinkRegex();
     }
 }

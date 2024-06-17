@@ -102,11 +102,7 @@ namespace ACMESharp.Crypto.JOSE.Impl
         public void ImportJwk(string jwkJson)
         {
             Init();
-            var jwk = JsonSerializer.Deserialize(jwkJson, AcmeJson.Insensitive.RSJwk);
-            if (jwk == null)
-            {
-                throw new InvalidOperationException();
-            }
+            var jwk = JsonSerializer.Deserialize(jwkJson, AcmeJson.Insensitive.RSJwk) ?? throw new InvalidOperationException();
             var keyParams = new RSAParameters
             {
                 Exponent = Base64Tool.UrlDecode(jwk.E),

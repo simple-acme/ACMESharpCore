@@ -9,7 +9,7 @@ namespace ACMESharp.Authorizations
         public const string DnsRecordNamePrefix = "_acme-challenge";
         public const string DnsRecordTypeDefault = "TXT";
 
-        public string ChallengeType => Dns01ChallengeType;
+        public readonly string ChallengeType => Dns01ChallengeType;
 
         public string DnsRecordName { get; set; }
 
