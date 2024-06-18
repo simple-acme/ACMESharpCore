@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Configurations>Debug;DebugTrimmed;Release;ReleaseTrimmed</Configurations>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
