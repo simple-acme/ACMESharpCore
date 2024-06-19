@@ -15,7 +15,7 @@ namespace ACMESharp.HTTP
     /// </remarks>
     public class LinkCollection : IEnumerable<string>, IEnumerable<Link>, ILookup<string, string>
     {
-        private readonly List<Link> _Links = new();
+        private readonly List<Link> _Links = [];
 
         public LinkCollection()
         { }

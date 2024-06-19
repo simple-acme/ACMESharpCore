@@ -24,7 +24,7 @@ namespace ACMESharp.Protocol
     /// </summary>
     public class AcmeProtocolClient
     {
-        private static readonly HttpStatusCode[] SkipExpectedStatuses = Array.Empty<HttpStatusCode>();
+        private static readonly HttpStatusCode[] SkipExpectedStatuses = [];
         private readonly HttpClient _http;
 
         /// <summary>
@@ -42,16 +42,19 @@ namespace ACMESharp.Protocol
                 throw new ArgumentException("http lacks BaseAddress");
             }
             Directory = new ServiceDirectory();
-            Signer = ResolveDefaultSigner();
+            Signer = ResolveDefaultSigner;
             _usePostAsGet = usePostAsGet;
         }
 
-        private static IJwsTool ResolveDefaultSigner()
+        private static IJwsTool ResolveDefaultSigner
         {
-            // We default to ES256 signer
-            var signer = new Crypto.JOSE.Impl.ESJwsTool();
-            signer.Init();
-            return signer;
+            get
+            {
+                // We default to ES256 signer
+                var signer = new Crypto.JOSE.Impl.ESJwsTool();
+                signer.Init();
+                return signer;
+            }
         }
 
         /// <summary>
@@ -147,10 +150,10 @@ namespace ACMESharp.Protocol
             _ = await SendAcmeAsync(
                     Directory.NewNonce,
                     method: HttpMethod.Head,
-                    expectedStatuses: new[] {
+                    expectedStatuses: [
                         HttpStatusCode.OK,
                         HttpStatusCode.NoContent,
-                    });
+                    ]);
         }
 
         /// <summary>
@@ -178,7 +181,7 @@ namespace ACMESharp.Protocol
                 AcmeJson.Insensitive.CreateAccountRequest,
                 AcmeJson.Insensitive.Account,
                 message: message,
-                expectedStatuses: new[] { HttpStatusCode.Created, HttpStatusCode.OK },
+                expectedStatuses: [HttpStatusCode.Created, HttpStatusCode.OK],
                 includePublicKey: true);
 
             return DecodeAccountResponse(resp);
@@ -335,7 +338,7 @@ namespace ACMESharp.Protocol
                 requestType: AcmeJson.Insensitive.CreateOrderRequest,
                 responseType: AcmeJson.Insensitive.AcmeOrder,
                 message: message,
-                expectedStatuses: new[] { HttpStatusCode.Created, HttpStatusCode.OK });
+                expectedStatuses: [HttpStatusCode.Created, HttpStatusCode.OK]);
 
             return DecodeOrderResponse(resp);
         }
@@ -512,7 +515,7 @@ namespace ACMESharp.Protocol
                     details.Payload.Finalize,
                     requestType: AcmeJson.Insensitive.FinalizeOrderRequest,
                     responseType: AcmeJson.Insensitive.AcmeOrder,
-                    expectedStatuses: new[] { HttpStatusCode.OK, HttpStatusCode.Created },
+                    expectedStatuses: [HttpStatusCode.OK, HttpStatusCode.Created],
                     message: message);
 
             return DecodeOrderResponse(resp, details.OrderUrl);
@@ -562,7 +565,7 @@ namespace ACMESharp.Protocol
             _ = await SendAcmeAsync(
                     Directory.RevokeCert,
                     message: serialized,
-                    expectedStatuses: new[] { HttpStatusCode.OK });
+                    expectedStatuses: [HttpStatusCode.OK]);
             return true;
         }
 
@@ -604,7 +607,7 @@ namespace ACMESharp.Protocol
             [System.Runtime.CompilerServices.CallerMemberName] string opName = "")
         {
             method ??= HttpMethod.Post;
-            expectedStatuses ??= new[] { HttpStatusCode.OK };
+            expectedStatuses ??= [HttpStatusCode.OK];
 
             var uri = new Uri(_http.BaseAddress!, relativeUri);
             var requ = new HttpRequestMessage(method, uri);
@@ -672,14 +675,10 @@ namespace ACMESharp.Protocol
             };
         }
 
-        public class Response<TResponse>
+        public class Response<TResponse>(HttpResponseMessage message)
         {
-            public HttpResponseMessage Message { get; init; }
+            public HttpResponseMessage Message { get; init; } = message;
             public TResponse? Value { get; set; }
-            public Response(HttpResponseMessage message)
-            {
-                Message = message;
-            }
         }
 
         /// <summary>

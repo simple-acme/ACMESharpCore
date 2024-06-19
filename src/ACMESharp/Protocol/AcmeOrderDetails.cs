@@ -11,13 +11,9 @@ namespace ACMESharp.Protocol
     /// to several ACME operations regarding an ACME AcmeOrder, such as 
     /// AcmeOrder creation and finalization.
     /// </remarks>
-    public class AcmeOrderDetails
+    public class AcmeOrderDetails(AcmeOrder payload)
     {
-        public AcmeOrderDetails(AcmeOrder payload)
-        {
-            Payload = payload;
-        }
-        public AcmeOrder Payload { get; set; }
+        public AcmeOrder Payload { get; set; } = payload;
 
         public string? OrderUrl { get; set; }
     }
