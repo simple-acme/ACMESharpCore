@@ -14,6 +14,7 @@ namespace ACMESharp
     [JsonSerializable(typeof(ESPrivateExport))]
     [JsonSerializable(typeof(Problem))]
     [JsonSerializable(typeof(AcmeOrder))]
+    [JsonSerializable(typeof(AcmeOrders))]
     [JsonSerializable(typeof(JwsSignedPayload))]
     [JsonSerializable(typeof(ServiceDirectory))]
     [JsonSerializable(typeof(Account))]

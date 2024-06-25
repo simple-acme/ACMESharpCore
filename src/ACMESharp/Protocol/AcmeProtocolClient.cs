@@ -367,6 +367,25 @@ namespace ACMESharp.Protocol
         }
 
         /// <summary>
+        /// Get list of pre-existing orders
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public async Task<AcmeOrders?> GetOrdersAsync(string? url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return null;
+            }
+            var method = _usePostAsGet ? HttpMethod.Post : HttpMethod.Get;
+            var resp = await SendAcmeAsync(
+                url,
+                responseType: AcmeJson.Insensitive.AcmeOrders,
+                method: method);
+            return DecodeOrdersResponse(resp);
+        }
+
+        /// <summary>
         /// Retrieves the details of an AcmeAuthorization associated with a previously
         /// created AcmeOrder.  The AcmeAuthorization details URL is returned as part of
         /// an AcmeOrder's response.
@@ -772,6 +791,18 @@ namespace ACMESharp.Protocol
                 OrderUrl = orderUrl ?? originalUrl
             };
             return order;
+        }
+
+        protected static AcmeOrders? DecodeOrdersResponse(Response<AcmeOrders> resp)
+        {
+            _ = resp.Message.Headers.TryGetValues("Link", out var linkValues);
+            var links = new HTTP.LinkCollection(linkValues); // This allows/handles null
+            var nextLink = links.GetFirstOrDefault("next")?.Uri;
+            if (resp.Value != null)
+            {
+                resp.Value.Next = nextLink;
+            }
+            return resp.Value;
         }
 
         protected bool ExtractNextNonce(HttpResponseMessage resp, bool skipThrow = false)
