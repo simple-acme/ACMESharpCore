@@ -618,7 +618,7 @@ namespace ACMESharp.Protocol
         ///         name if unspecified</param>
         /// <returns>The returned HTTP response message, unaltered, after inspecting the
         ///         response details for possible error or problem result</returns>
-        async Task<HttpResponseMessage> SendAcmeAsync(
+        private async Task<HttpResponseMessage> SendAcmeAsync(
             string relativeUri,
             HttpMethod? method = null,
             string? message = null,
@@ -674,7 +674,7 @@ namespace ACMESharp.Protocol
         /// <param name="includePublicKey"></param>
         /// <param name="opName"></param>
         /// <returns></returns>
-        async Task<Response<TResponse>> SendAcmeAsync<TResponse, TRequest>(
+        private async Task<Response<TResponse>> SendAcmeAsync<TResponse, TRequest>(
             string uri, JsonTypeInfo<TRequest> requestType, JsonTypeInfo<TResponse> responseType,
             HttpMethod? method = null, TRequest? message = null, HttpStatusCode[]? expectedStatuses = null,
             bool includePublicKey = false,
@@ -711,7 +711,7 @@ namespace ACMESharp.Protocol
         /// <param name="expectedStatuses"></param>
         /// <param name="opName"></param>
         /// <returns></returns>
-        async Task<Response<TResponse>> SendAcmeAsync<TResponse>(
+        private async Task<Response<TResponse>> SendAcmeAsync<TResponse>(
             string uri, JsonTypeInfo<TResponse> responseType,
             string? message = null, HttpMethod? method = null, HttpStatusCode[]? expectedStatuses = null,
             [System.Runtime.CompilerServices.CallerMemberName] string opName = "")
@@ -723,13 +723,13 @@ namespace ACMESharp.Protocol
             };
         }
 
-        static async Task<T?> Deserialize<T>(HttpResponseMessage resp, JsonTypeInfo<T> typeInfo)
+        private static async Task<T?> Deserialize<T>(HttpResponseMessage resp, JsonTypeInfo<T> typeInfo)
         {
             var content = await resp.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize(content, typeInfo);
         }
 
-        static async Task<AcmeProtocolException> DecodeResponseErrorAsync(HttpResponseMessage resp,
+        private static async Task<AcmeProtocolException> DecodeResponseErrorAsync(HttpResponseMessage resp,
             string? message = null,
             [System.Runtime.CompilerServices.CallerMemberName] string opName = "")
         {
