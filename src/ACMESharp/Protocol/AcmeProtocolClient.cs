@@ -26,6 +26,7 @@ namespace ACMESharp.Protocol
     {
         private static readonly HttpStatusCode[] SkipExpectedStatuses = [];
         private readonly HttpClient _http;
+        private readonly IAcmeLogger _logger;
 
         /// <summary>
         /// To implement Let's Encrypt protocol change per RFC 8555,
@@ -34,9 +35,10 @@ namespace ACMESharp.Protocol
         /// </summary>
         private readonly bool _usePostAsGet;
 
-        public AcmeProtocolClient(HttpClient http, bool usePostAsGet = false)
+        public AcmeProtocolClient(HttpClient http, IAcmeLogger logger, bool usePostAsGet = false)
         {
             _http = http;
+            _logger = logger;
             if (http.BaseAddress == null)
             {
                 throw new ArgumentException("http lacks BaseAddress");
@@ -555,7 +557,7 @@ namespace ACMESharp.Protocol
             var ret = new AcmeCertificate();
             if (resp.Headers.TryGetValues("Link", out var linkValues))
             {
-                ret.Links = new HTTP.LinkCollection(linkValues);
+                ret.Links = new HTTP.LinkCollection(linkValues, _logger);
             }
             ret.Certificate = await resp.Content.ReadAsByteArrayAsync();
             return ret;
@@ -760,10 +762,10 @@ namespace ACMESharp.Protocol
         ///         Account object; some ACME Account operations do not return the full
         ///         details of an existing Account</param>
         /// <returns></returns>
-        protected static AccountDetails DecodeAccountResponse(Response<Account> resp, AccountDetails? existing = null)
+        protected AccountDetails DecodeAccountResponse(Response<Account> resp, AccountDetails? existing = null)
         {
             _ = resp.Message.Headers.TryGetValues("Link", out var linkValues);
-            var links = new HTTP.LinkCollection(linkValues); // This allows/handles null
+            var links = new HTTP.LinkCollection(linkValues, _logger); // This allows/handles null
             var tosLink = links.GetFirstOrDefault(Constants.TosLinkHeaderRelationKey)?.Uri;
             if (resp.Value == default)
             {
@@ -793,10 +795,10 @@ namespace ACMESharp.Protocol
             return order;
         }
 
-        protected static AcmeOrders? DecodeOrdersResponse(Response<AcmeOrders> resp)
+        protected AcmeOrders? DecodeOrdersResponse(Response<AcmeOrders> resp)
         {
             _ = resp.Message.Headers.TryGetValues("Link", out var linkValues);
-            var links = new HTTP.LinkCollection(linkValues); // This allows/handles null
+            var links = new HTTP.LinkCollection(linkValues, _logger); // This allows/handles null
             var nextLink = links.GetFirstOrDefault("next")?.Uri;
             if (resp.Value != null)
             {

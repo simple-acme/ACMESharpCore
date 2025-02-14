@@ -29,20 +29,11 @@ namespace ACMESharp.HTTP
 
             var m = LinkHeaderRegex.Match(value);
             if (!m.Success)
-                throw new ArgumentException("Invalid Link header format", nameof(value));
-
+            {
+                throw new FormatException(value);
+            }
             Uri = m.Groups[1].Value;
             Relation = m.Groups[2].Value;
-        }
-
-        public Link(string uri, string rel)
-        {
-            // This will parse the URI to make sure it's well-formed and throw if not
-            _ = new Uri(uri);
-
-            Uri = uri;
-            Relation = rel;
-            Value = string.Format(LinkHeaderFormat, uri, rel);
         }
 
         public string Value { get; private set; }

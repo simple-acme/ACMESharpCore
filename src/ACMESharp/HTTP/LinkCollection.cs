@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,8 +18,7 @@ namespace ACMESharp.HTTP
     {
         private readonly List<Link> _Links = [];
 
-        public LinkCollection()
-        { }
+        public LinkCollection() { }
 
         /// <param name="links">It's OK to provide a null value.</param>
         public LinkCollection(IEnumerable<Link> links)
@@ -33,13 +33,20 @@ namespace ACMESharp.HTTP
         }
 
         /// <param name="linkValues">It's OK to provide a null value.</param>
-        public LinkCollection(IEnumerable<string>? linkValues)
+        public LinkCollection(IEnumerable<string>? linkValues, IAcmeLogger log)
         {
             if (linkValues != null)
             {
                 foreach (var lv in linkValues)
                 {
-                    Add(new Link(lv));
+                    try
+                    {
+                        Add(new Link(lv));
+                    } 
+                    catch (Exception ex)
+                    {
+                        log.Warning(ex, "Invalid link");
+                    }
                 }
             }
         }
@@ -95,37 +102,5 @@ namespace ACMESharp.HTTP
         {
             return ((IEnumerable<string>)this).GetEnumerator();
         }
-
-        // We may use this in the future to build a more
-        // efficient version of the Lookup interface
-        //
-        //private class LinkGrouping : IGrouping<string, string>
-        //{
-        //    public string Relation
-        //    { get; set; }
-        //
-        //    public IEnumerable<Link> Links
-        //    { get; set; }
-        //
-        //    public string Key
-        //    {
-        //        get
-        //        {
-        //            return Relation;
-        //        }
-        //    }
-        //
-        //    public IEnumerator<string> GetEnumerator()
-        //    {
-        //        foreach (var l in Links)
-        //            yield return l.Uri;
-        //    }
-        //
-        //    IEnumerator IEnumerable.GetEnumerator()
-        //    {
-        //        foreach (var l in Links)
-        //            yield return l.Uri;
-        //    }
-        //}
     }
 }
