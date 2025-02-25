@@ -33,6 +33,7 @@ namespace ACMESharp.HTTP
         }
 
         /// <param name="linkValues">It's OK to provide a null value.</param>
+        /// <param name="log">Logger for warnings</param>
         public LinkCollection(IEnumerable<string>? linkValues, IAcmeLogger log)
         {
             if (linkValues != null)
