@@ -42,7 +42,7 @@ namespace ACMESharp.HTTP
 
         public string Relation { get; private set; }
 
-        [GeneratedRegex("<(.+)>;[ ]?rel=\"(.+)\"")]
+        [GeneratedRegex("<(.+)>;[ ]?rel=\"?([^\"]+)\"?")]
         private static partial Regex LinkRegex();
     }
 }
