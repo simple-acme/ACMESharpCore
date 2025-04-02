@@ -23,6 +23,9 @@ namespace ACMESharp.Protocol.Resources
         [JsonPropertyName("identifiers")]
         public AcmeIdentifier[]? Identifiers { get; set; }
 
+        [JsonPropertyName("profile")]
+        public string? Profile { get; set; }
+
         [JsonPropertyName("authorizations")]
         public string[]? Authorizations { get; set; }
 

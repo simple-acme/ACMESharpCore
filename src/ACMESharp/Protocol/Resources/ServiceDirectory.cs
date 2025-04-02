@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace ACMESharp.Protocol.Resources
 {
     public class ServiceDirectory
@@ -23,6 +25,7 @@ namespace ACMESharp.Protocol.Resources
         public string? TermsOfService { get; set; }
         public string? Website { get; set; }
         public string[]? CaaIdentities { get; set; }
+        public Dictionary<string, string>? Profiles { get; set; }
         public bool? ExternalAccountRequired { get; set; }
     }
 }
