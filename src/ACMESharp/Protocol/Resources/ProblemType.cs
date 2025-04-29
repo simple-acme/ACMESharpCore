@@ -12,6 +12,7 @@ namespace ACMESharp.Protocol.Resources
 
         AccountDoesNotExist,
         AlreadyRevoked,
+        AlreadyReplaced,
         BadCSR,
         BadNonce,
         BadRevocationReason,
