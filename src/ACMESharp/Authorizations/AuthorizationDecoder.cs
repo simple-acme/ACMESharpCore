@@ -58,7 +58,7 @@ namespace ACMESharp.Authorizations
             return new Http01ChallengeValidationDetails
             {
                 HttpResourceUrl = $@"http://{authz.Identifier?.Value}/{Http01ChallengeValidationDetails.HttpPathPrefix}/{challenge.Token}",
-                HttpResourcePath = $@"{Http01ChallengeValidationDetails.HttpPathPrefix}/{challenge.Token}",
+                HttpResourceName = $@"{challenge.Token}",
                 HttpResourceContentType = Http01ChallengeValidationDetails.HttpResourceContentTypeDefault,
                 HttpResourceValue = keyAuthz,
             };

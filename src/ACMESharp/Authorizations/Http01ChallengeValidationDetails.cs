@@ -15,9 +15,9 @@ namespace ACMESharp.Authorizations
 
         public string HttpResourceUrl { get; set; }
 
-        public string HttpResourcePath { get; set; }
-
         public string HttpResourceContentType { get; set; }
+
+        public string HttpResourceName { get; set; }
 
         public string HttpResourceValue { get; set; }
     }
