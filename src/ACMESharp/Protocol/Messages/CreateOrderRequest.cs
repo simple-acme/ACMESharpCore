@@ -12,6 +12,10 @@ namespace ACMESharp.Protocol.Messages
         [JsonRequired]
         public AcmeIdentifier[]? Identifiers { get; set; }
 
+        [JsonPropertyName("profile")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Profile { get; set; }
+
         [JsonPropertyName("replaces")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Replaces { get; set; }

@@ -322,7 +322,7 @@ namespace ACMESharp.Protocol
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.4
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.1.3
         /// </remarks>
-        public async Task<AcmeOrderDetails> CreateOrderAsync(IEnumerable<AcmeIdentifier> identifiers, string? replaces = null, DateTime? notBefore = null, DateTime? notAfter = null)
+        public async Task<AcmeOrderDetails> CreateOrderAsync(IEnumerable<AcmeIdentifier> identifiers, string? replaces = null, DateTime? notBefore = null, DateTime? notAfter = null, string? profile = null)
         {
             if (string.IsNullOrEmpty(Directory.NewOrder))
             {
@@ -330,7 +330,8 @@ namespace ACMESharp.Protocol
             }
             var message = new CreateOrderRequest
             {
-                Identifiers = identifiers.ToArray(),
+                Identifiers = [.. identifiers],
+                Profile = profile,
                 Replaces = replaces,
                 NotBefore = notBefore?.ToString(Constants.Rfc3339DateTimeFormat),
                 NotAfter = notAfter?.ToString(Constants.Rfc3339DateTimeFormat),
