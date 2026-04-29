@@ -5,11 +5,13 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using System.Threading.Tasks;
 using ACMESharp.Crypto;
 using ACMESharp.Crypto.JOSE;
+using ACMESharp.Crypto.JOSE.Impl;
 using ACMESharp.Protocol.Messages;
 using ACMESharp.Protocol.Resources;
 using static ACMESharp.Crypto.JOSE.Impl.ESJwsTool;
@@ -52,10 +54,20 @@ namespace ACMESharp.Protocol
         {
             get
             {
-                // We default to ES256 signer
-                var signer = new Crypto.JOSE.Impl.ESJwsTool();
-                signer.Init();
-                return signer;
+                // We default to an ES256 signer
+                try
+                {
+                    var signer = new ESJwsTool();
+                    signer.Init();
+                    return signer;
+                }
+                catch (CryptographicException)
+                {
+                    // If we fail to create an ES256 signer, we fall back to RS256
+                    var signer = new RSJwsTool();
+                    signer.Init();
+                    return signer;
+                }
             }
         }
 
