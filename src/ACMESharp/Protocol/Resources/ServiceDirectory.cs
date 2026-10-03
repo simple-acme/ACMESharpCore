@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace ACMESharp.Protocol.Resources
 {
@@ -27,5 +28,7 @@ namespace ACMESharp.Protocol.Resources
         public string[]? CaaIdentities { get; set; }
         public Dictionary<string, string>? Profiles { get; set; }
         public bool? ExternalAccountRequired { get; set; }
+        [JsonPropertyName("issuer-domain-names")]
+        public string[]? IssuerDomainNames { get; set; }
     }
 }

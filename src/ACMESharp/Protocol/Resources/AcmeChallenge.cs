@@ -29,7 +29,16 @@ namespace ACMESharp.Protocol.Resources
         [JsonPropertyName("error")]
         public Problem? Error { get; set; }
 
+        /// <summary>
+        /// Token used for HTTP-01, DNS-01, and TLS-ALPN-01 challenges.
+        /// </summary>
         [JsonPropertyName("token")]
         public string? Token { get; set; }
+
+        /// <summary>
+        /// New for DNS-PERSIST-01 challenge
+        /// </summary>
+        [JsonPropertyName("issuer-domain-names")]
+        public string[]? IssuerDomainNames { get; set; }
     }
 }

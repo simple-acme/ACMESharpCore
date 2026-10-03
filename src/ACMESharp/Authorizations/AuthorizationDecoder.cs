@@ -23,9 +23,18 @@ namespace ACMESharp.Authorizations
             return challengeType switch
             {
                 Dns01ChallengeValidationDetails.Dns01ChallengeType => ResolveChallengeForDns01(authz, challenge, signer),
+                DnsPersist01ChallengeValidationDetails.DnsPersist01ChallengeType => ResolveChallengeForDnsPersist01(challenge),
                 Http01ChallengeValidationDetails.Http01ChallengeType => ResolveChallengeForHttp01(authz, challenge, signer),
                 TlsAlpn01ChallengeValidationDetails.TlsAlpn01ChallengeType => ResolveChallengeForTlsAlpn01(challenge, signer),
                 _ => throw new NotImplementedException($"Unknown or unsupported Challenge type [{challengeType}]"),
+            };
+        }
+
+        public static DnsPersist01ChallengeValidationDetails ResolveChallengeForDnsPersist01(AcmeChallenge challenge)
+        {
+            return new DnsPersist01ChallengeValidationDetails
+            {
+                IssuerDomainNames = challenge?.IssuerDomainNames ?? throw new InvalidOperationException($"Challenge type [{DnsPersist01ChallengeValidationDetails.DnsPersist01ChallengeType}] is missing required IssuerDomainNames property")
             };
         }
 
