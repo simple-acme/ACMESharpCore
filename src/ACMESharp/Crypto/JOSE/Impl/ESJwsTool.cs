@@ -1,5 +1,6 @@
 using System;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using static ACMESharp.Crypto.JOSE.Impl.ESJwsTool;
@@ -146,6 +147,13 @@ namespace ACMESharp.Crypto.JOSE.Impl
                 throw new InvalidOperationException();
             }
             return _dsa.VerifyData(raw, sig, _shaName);
+        }
+
+        public byte[] GetThumbprint()
+        {
+            var export = ExportJwk();
+            var json = JsonSerializer.Serialize(export, AcmeJson.Insensitive.ESJwk);
+            return SHA256.HashData(Encoding.UTF8.GetBytes(json));
         }
 
         /// <summary>
