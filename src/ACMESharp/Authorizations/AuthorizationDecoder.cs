@@ -35,21 +35,20 @@ namespace ACMESharp.Authorizations
             };
         }
 
+        /// <summary>
+        /// https://datatracker.ietf.org/doc/html/draft-ietf-acme-dns-persist-02#section-10.2
+        /// </summary>
+        /// <param name="authz"></param>
+        /// <param name="c"></param>
+        /// <param name="signer"></param>
+        /// <param name="account"></param>
+        /// <param name="directoryMeta"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         public static DnsPersist01ChallengeValidationDetails ResolveChallengeForDnsPersist01(AcmeAuthorization authz, AcmeChallenge c, IJwsTool signer, AccountDetails? account, DirectoryMeta? directoryMeta)
         {
-            var x = new DnsPersist01ChallengeValidationDetails
-            {
-                DnsRecordName = $"{DnsPersist01ChallengeValidationDetails.DnsRecordNamePrefix}.{authz.Identifier}",
-                DnsRecordType = DnsPersist01ChallengeValidationDetails.DnsRecordTypeDefault,
-                IssuerDomainNames = c?.IssuerDomainNames ?? throw new InvalidOperationException($"Challenge type [{DnsPersist01ChallengeValidationDetails.DnsPersist01ChallengeType}] is missing required IssuerDomainNames property")
-            };
-            if (c.IssuerDomainNames == null || c.IssuerDomainNames.Length == 0)
-            {
-                throw new InvalidOperationException($"Challenge type [{DnsPersist01ChallengeValidationDetails.DnsPersist01ChallengeType}] is missing required IssuerDomainNames property");
-            }
 
-            // Specification:
-            // https://datatracker.ietf.org/doc/html/draft-ietf-acme-dns-persist-02#section-10.2
+
 
             var hashBytes = new List<byte>();
             var domain = $"{authz?.Identifier}";
@@ -59,12 +58,17 @@ namespace ACMESharp.Authorizations
             hashBytes.AddRange(Encoding.ASCII.GetBytes(account?.Kid ?? throw new InvalidOperationException("Missing account KID")));
 
             var sha256hash = SHA256.HashData([.. hashBytes]);
-            var hash = Base64Tool.UrlEncode(sha256hash);
-
+            var hash = Base64Tool.UrlEncode(sha256hash)
             var prefix = directoryMeta?.AccountHashPrefix ?? throw new InvalidOperationException("Missing account hash prefix.");
-            x.DnsRecordValue = $"{c.IssuerDomainNames.First()}; accounturi={prefix}sha256/{hash}";
+         
 
-            return x;
+            return new DnsPersist01ChallengeValidationDetails
+            {
+                DnsRecordName = $"{DnsPersist01ChallengeValidationDetails.DnsRecordNamePrefix}.{authz.Identifier}",
+                DnsRecordType = DnsPersist01ChallengeValidationDetails.DnsRecordTypeDefault,
+                IssuerDomainNames = c?.IssuerDomainNames ?? throw new InvalidOperationException($"Challenge type [{DnsPersist01ChallengeValidationDetails.DnsPersist01ChallengeType}] is missing required IssuerDomainNames property"),
+                DnsRecordValue = $"{c.IssuerDomainNames.First()}; accounturi={prefix}sha256/{hash}"
+            };
         }
 
         /// <summary>
