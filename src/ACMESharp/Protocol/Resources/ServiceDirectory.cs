@@ -30,5 +30,6 @@ namespace ACMESharp.Protocol.Resources
         public bool? ExternalAccountRequired { get; set; }
         [JsonPropertyName("issuer-domain-names")]
         public string[]? IssuerDomainNames { get; set; }
+        public string? AccountHashPrefix { get; set; }
     }
 }

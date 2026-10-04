@@ -82,13 +82,13 @@ namespace ACMESharp.Crypto.JOSE
         /// as per <see href="https://tools.ietf.org/html/rfc7638">RFC 7638</see>,
         /// JSON Web Key (JWK) Thumbprint.
         /// </summary>
-        public static byte[] ComputeThumbprint(IJwsTool signer, HashAlgorithm algor)
+        public static byte[] ComputeThumbprint(IJwsTool signer)
         {
             // As per RFC 7638 Section 3, we export the JWK in a canonical form
             // and then produce a JSON object with no whitespace or line breaks
             var jwkJson = signer.ExportEab();
             var jwkBytes = Encoding.UTF8.GetBytes(jwkJson);
-            var jwkHash = algor.ComputeHash(jwkBytes);
+            var jwkHash = SHA256.HashData(jwkBytes);
 
             return jwkHash;
         }
@@ -101,8 +101,7 @@ namespace ACMESharp.Crypto.JOSE
         /// </summary>
         public static string ComputeKeyAuthorization(IJwsTool signer, string? token)
         {
-            using var sha = SHA256.Create();
-            var jwkThumb = Base64Tool.UrlEncode(ComputeThumbprint(signer, sha));
+            var jwkThumb = Base64Tool.UrlEncode(ComputeThumbprint(signer));
             return $"{token}.{jwkThumb}";
         }
 
@@ -113,10 +112,8 @@ namespace ACMESharp.Crypto.JOSE
         /// </summary>
         public static string ComputeKeyAuthorizationDigest(IJwsTool signer, string? token)
         {
-            using var sha = SHA256.Create();
-            var jwkThumb = Base64Tool.UrlEncode(ComputeThumbprint(signer, sha));
-            var keyAuthz = $"{token}.{jwkThumb}";
-            var keyAuthzDig = sha.ComputeHash(Encoding.UTF8.GetBytes(keyAuthz));
+            var keyAuthz = ComputeKeyAuthorization(signer, token);
+            var keyAuthzDig = SHA256.HashData(Encoding.UTF8.GetBytes(keyAuthz));
             return Base64Tool.UrlEncode(keyAuthzDig);
         }
     }

@@ -1,6 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using ACMESharp.Crypto;
 using ACMESharp.Crypto.JOSE;
+using ACMESharp.Protocol;
 using ACMESharp.Protocol.Resources;
 
 namespace ACMESharp.Authorizations
@@ -13,7 +18,7 @@ namespace ACMESharp.Authorizations
         /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-8
         /// </remarks>
-        public static IChallengeValidationDetails DecodeChallengeValidation(AcmeAuthorization authz, string challengeType, IJwsTool signer)
+        public static IChallengeValidationDetails DecodeChallengeValidation(AcmeAuthorization authz, string challengeType, IJwsTool signer, AccountDetails? account, DirectoryMeta? directoryMeta)
         {
             var challenge = authz.Challenges?.Where(x => x.Type == challengeType).FirstOrDefault();
             if (challenge == default)
@@ -23,19 +28,43 @@ namespace ACMESharp.Authorizations
             return challengeType switch
             {
                 Dns01ChallengeValidationDetails.Dns01ChallengeType => ResolveChallengeForDns01(authz, challenge, signer),
-                DnsPersist01ChallengeValidationDetails.DnsPersist01ChallengeType => ResolveChallengeForDnsPersist01(challenge),
+                DnsPersist01ChallengeValidationDetails.DnsPersist01ChallengeType => ResolveChallengeForDnsPersist01(authz, challenge, signer, account, directoryMeta),
                 Http01ChallengeValidationDetails.Http01ChallengeType => ResolveChallengeForHttp01(authz, challenge, signer),
                 TlsAlpn01ChallengeValidationDetails.TlsAlpn01ChallengeType => ResolveChallengeForTlsAlpn01(challenge, signer),
                 _ => throw new NotImplementedException($"Unknown or unsupported Challenge type [{challengeType}]"),
             };
         }
 
-        public static DnsPersist01ChallengeValidationDetails ResolveChallengeForDnsPersist01(AcmeChallenge challenge)
+        public static DnsPersist01ChallengeValidationDetails ResolveChallengeForDnsPersist01(AcmeAuthorization authz, AcmeChallenge c, IJwsTool signer, AccountDetails? account, DirectoryMeta? directoryMeta)
         {
-            return new DnsPersist01ChallengeValidationDetails
+            var x = new DnsPersist01ChallengeValidationDetails
             {
-                IssuerDomainNames = challenge?.IssuerDomainNames ?? throw new InvalidOperationException($"Challenge type [{DnsPersist01ChallengeValidationDetails.DnsPersist01ChallengeType}] is missing required IssuerDomainNames property")
+                DnsRecordName = $"{DnsPersist01ChallengeValidationDetails.DnsRecordNamePrefix}.{authz.Identifier}",
+                DnsRecordType = DnsPersist01ChallengeValidationDetails.DnsRecordTypeDefault,
+                IssuerDomainNames = c?.IssuerDomainNames ?? throw new InvalidOperationException($"Challenge type [{DnsPersist01ChallengeValidationDetails.DnsPersist01ChallengeType}] is missing required IssuerDomainNames property")
             };
+            if (c.IssuerDomainNames == null || c.IssuerDomainNames.Length == 0)
+            {
+                throw new InvalidOperationException($"Challenge type [{DnsPersist01ChallengeValidationDetails.DnsPersist01ChallengeType}] is missing required IssuerDomainNames property");
+            }
+
+            // Specification:
+            // https://datatracker.ietf.org/doc/html/draft-ietf-acme-dns-persist-02#section-10.2
+
+            var hashBytes = new List<byte>();
+            var domain = $"{authz?.Identifier}";
+            hashBytes.Add((byte)domain.Length);
+            hashBytes.AddRange(Encoding.ASCII.GetBytes(domain));
+            hashBytes.AddRange(JwsHelper.ComputeThumbprint(signer));
+            hashBytes.AddRange(Encoding.ASCII.GetBytes(account?.Kid ?? throw new InvalidOperationException("Missing account KID")));
+
+            var sha256hash = SHA256.HashData([.. hashBytes]);
+            var hash = Base64Tool.UrlEncode(sha256hash);
+
+            var prefix = directoryMeta?.AccountHashPrefix ?? throw new InvalidOperationException("Missing account hash prefix.");
+            x.DnsRecordValue = $"{c.IssuerDomainNames.First()}; accounturi={prefix}sha256/{hash}";
+
+            return x;
         }
 
         /// <summary>
