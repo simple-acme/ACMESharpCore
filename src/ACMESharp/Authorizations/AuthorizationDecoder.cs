@@ -47,9 +47,6 @@ namespace ACMESharp.Authorizations
         /// <exception cref="InvalidOperationException"></exception>
         public static DnsPersist01ChallengeValidationDetails ResolveChallengeForDnsPersist01(AcmeAuthorization authz, AcmeChallenge c, IJwsTool signer, AccountDetails? account, DirectoryMeta? directoryMeta)
         {
-
-
-
             var hashBytes = new List<byte>();
             var domain = $"{authz?.Identifier}";
             hashBytes.Add((byte)domain.Length);
@@ -58,13 +55,12 @@ namespace ACMESharp.Authorizations
             hashBytes.AddRange(Encoding.ASCII.GetBytes(account?.Kid ?? throw new InvalidOperationException("Missing account KID")));
 
             var sha256hash = SHA256.HashData([.. hashBytes]);
-            var hash = Base64Tool.UrlEncode(sha256hash)
+            var hash = Base64Tool.UrlEncode(sha256hash);
             var prefix = directoryMeta?.AccountHashPrefix ?? throw new InvalidOperationException("Missing account hash prefix.");
-         
 
             return new DnsPersist01ChallengeValidationDetails
             {
-                DnsRecordName = $"{DnsPersist01ChallengeValidationDetails.DnsRecordNamePrefix}.{authz.Identifier}",
+                DnsRecordName = $"{DnsPersist01ChallengeValidationDetails.DnsRecordNamePrefix}.{domain}",
                 DnsRecordType = DnsPersist01ChallengeValidationDetails.DnsRecordTypeDefault,
                 IssuerDomainNames = c?.IssuerDomainNames ?? throw new InvalidOperationException($"Challenge type [{DnsPersist01ChallengeValidationDetails.DnsPersist01ChallengeType}] is missing required IssuerDomainNames property"),
                 DnsRecordValue = $"{c.IssuerDomainNames.First()}; accounturi={prefix}sha256/{hash}"

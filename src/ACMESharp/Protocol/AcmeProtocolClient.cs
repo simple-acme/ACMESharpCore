@@ -451,6 +451,30 @@ namespace ACMESharp.Protocol
         }
 
         /// <summary>
+        /// Deactivates an existing Account with the target ACME CA.
+        /// </summary>
+        /// <remarks>
+        /// https://www.rfc-editor.org/info/rfc8555/#section-7.3.6
+        /// </remarks>
+        public async Task<AccountDetails> DeactivateAccountAsync()
+        {
+            if (Account == null)
+            {
+                throw new InvalidOperationException();
+            }
+            var typedResp = await SendAcmeAsync(
+                    Account.Value.Kid,
+                    responseType: AcmeJson.Insensitive.Account,
+                    requestType: AcmeJson.Insensitive.DeactivateAccountRequest,
+                    message: new DeactivateAccountRequest());
+            if (typedResp.Value == null)
+            {
+                throw new Exception("Invalid response");
+            }
+            return DecodeAccountResponse(typedResp, existing: Account);
+        }
+
+        /// <summary>
         /// </summary>
         /// <remarks>
         /// https://tools.ietf.org/html/draft-ietf-acme-acme-12#section-7.5.1
